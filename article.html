@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>ARFACE — บทความ</title>
+<meta name="theme-color" content="#EAF5FD">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob: data:; font-src 'self'; connect-src 'self'; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/png" sizes="32x32" href="assets/icons/favicon-32.png">
+<link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png">
+<link rel="stylesheet" href="assets/fonts.css">
+<link rel="stylesheet" href="assets/arface.css">
+<style>
+  .screen { background: linear-gradient(180deg, #EAF6FF 0%, #F7FBFF 40%, #FFFFFF 75%); }
+  .art { position: relative; z-index: 5; margin: 8px 24px 0; }
+  .art .cat { display: inline-flex; height: 21px; padding: 0 11px; border-radius: 999px; background: var(--border); color: var(--blue); font-size: 11px; font-weight: 600; }
+  .art h1 { font-size: 23px; font-weight: 800; color: #122036; line-height: 1.3; letter-spacing: -.3px; margin-top: 11px; }
+  .art .meta { display: flex; align-items: center; gap: 8px; margin-top: 9px; font-size: 11.5px; color: var(--muted); }
+  .art .meta .dot { width: 3px; height: 3px; border-radius: 50%; background: var(--muted); }
+  .art .hero-ic { margin: 16px 0 4px; width: 56px; height: 56px; border-radius: 17px; background: var(--grad-tile); display: flex; align-items: center; justify-content: center; }
+  .art .cover { height: 190px; border-radius: 18px; margin: 6px 0 6px; background: #E7F5FF center / cover no-repeat; box-shadow: var(--sh-card); }
+  .art .body { margin-top: 8px; }
+  .art .body h2 { font-size: 16px; font-weight: 700; color: #16273C; margin-top: 18px; }
+  .art .body p { font-size: 13.7px; line-height: 1.72; color: #3D4F63; margin-top: 9px; }
+  .art .body ul { margin: 10px 0 0; padding: 0; list-style: none; }
+  .art .body li { position: relative; padding: 4px 0 4px 20px; font-size: 13.5px; line-height: 1.6; color: #3D4F63; }
+  .art .body li::before { content: ""; position: absolute; left: 3px; top: 12px; width: 6px; height: 6px; border-radius: 50%; background: #2D9FEE; }
+  .note { position: relative; z-index: 5; margin: 22px 24px 0; }
+  .cta-wrap { position: relative; z-index: 5; margin: 16px 18px 0; }
+  .relwrap { position: relative; z-index: 5; margin: 24px 24px 0; }
+  .relwrap .sect { margin: 0 0 10px; font-size: 16px; font-weight: 700; color: #16273C; }
+  .rel { display: flex; flex-direction: column; gap: 10px; }
+  .rel a { display: flex; align-items: center; gap: 11px; text-decoration: none; color: inherit; background: #fff; border-radius: 15px; box-shadow: var(--sh-card); padding: 12px 14px; }
+  .rel .ic { flex: none; width: 44px; height: 44px; border-radius: 12px; background: #E7F5FF center / cover no-repeat; }
+  .rel h3 { font-size: 13.5px; font-weight: 600; color: #16273C; line-height: 1.35; }
+  .rel .rc { font-size: 10.5px; color: var(--muted); margin-top: 2px; }
+</style>
+</head>
+<body>
+<div class="screen">
+  <div data-ar="statusbar"></div>
+  <header data-ar="topbar" data-title="บทความ" data-back="tips.html"></header>
+
+  <main>
+    <article class="art" id="art"></article>
+
+    <div class="note" id="art-note">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#44566B" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 16v-4M12 8h.01"/></svg>
+      <div class="tx">บทความนี้ให้ข้อมูลเพื่อความเข้าใจเบื้องต้น ไม่ใช่คำแนะนำหรือการวินิจฉัยทางการแพทย์<br>ควรปรึกษาแพทย์ผู้เชี่ยวชาญก่อนตัดสินใจทำหัตถการ</div>
+    </div>
+
+    <div class="relwrap" id="relwrap" style="display:none">
+      <div class="sect">บทความอื่น</div>
+      <div class="rel" id="rel"></div>
+    </div>
+
+    <div class="cta-wrap">
+      <a class="cta" href="scan.html">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8V6a2 2 0 0 1 2-2h2M16 4h2a2 2 0 0 1 2 2v2M20 16v2a2 2 0 0 1-2 2h-2M8 20H6a2 2 0 0 1-2-2v-2"/><path d="M12 8.2l1 2.6 2.6 1-2.6 1-1 2.6-1-2.6-2.6-1 2.6-1 1-2.6Z" fill="#fff" stroke="none"/></svg>
+        เริ่มสแกนใบหน้า
+      </a>
+    </div>
+  </main>
+
+  <nav data-ar="tabbar" data-active="tips"></nav>
+</div>
+
+<script src="assets/ui.js"></script>
+<script src="assets/articles.js"></script>
+<script src="assets/article.js"></script>
+<script src="assets/sw-register.js"></script>
+<script src="assets/fit.js"></script>
+</body>
+</html>

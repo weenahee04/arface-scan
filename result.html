@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>ARFACE — ผลลัพธ์ฟิลเลอร์</title>
+<meta name="theme-color" content="#EAF5FD">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob: data:; font-src 'self'; connect-src 'self'; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/png" sizes="32x32" href="assets/icons/favicon-32.png">
+<link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png">
+<link rel="stylesheet" href="assets/fonts.css">
+<style>
+  /* Canvas-exact build: reference mockup 941x1672 -> 430px width (รท2.188) */
+  :root {
+    --cyan:    #28BFEF;
+    --blue:    #1E9FE9;
+    --navy:    #16273C;
+    --text-2:  #6F7F91;
+    --muted:   #8295AB;
+    --border:  #D8ECF7;
+    --success: #2FA152;
+    --warning: #DF9117;
+    --th: 'Noto Sans Thai', sans-serif;
+    --en: 'Inter', 'Noto Sans Thai', sans-serif;
+    --grad-cta: linear-gradient(110deg, #7ED0FA 0%, #4AB4F5 52%, #2D9FEE 100%);
+    --sh-card: 0 8px 22px rgba(29,43,58,.055);
+    --sh-cta:  0 14px 26px rgba(45,159,238,.36), 0 4px 10px rgba(45,159,238,.20);
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html, body { background:#E2EAF1; }
+  body {
+    font-family: var(--th);
+    color: var(--navy);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    display: flex;
+    justify-content: center;
+    padding: 28px 0;
+    min-height: 100vh;
+  }
+  .screen {
+    position: relative;
+    width: 430px;
+    flex: none;
+    background: linear-gradient(180deg, #EAF5FD 0%, #F0F8FE 50%, #F6FBFF 100%);
+    overflow: hidden;
+    border-radius: 30px;
+    box-shadow: 0 30px 80px rgba(22,39,60,.22);
+    padding-bottom: 14px;
+  }
+  @media (max-width: 480px) {
+    body { padding: 0; background:#fff; }
+    .screen { width: 100%; border-radius: 0; box-shadow: none; min-height: 100vh; }
+  }
+
+  /* ---------- Status bar ---------- */
+  .statusbar { position: relative; z-index: 10; height: calc(env(safe-area-inset-top, 0px) + 8px); }
+  .statusbar > * { display: none !important; }
+  .statusbar .time { font-size: 15.5px; font-weight: 600; letter-spacing: .1px; color: #0B1B2B; }
+  .statusbar svg { display: block; }
+
+  /* ---------- Top bar ---------- */
+  .topbar {
+    position: relative; z-index: 10;
+    display: flex; align-items: center; gap: 10px;
+    margin: 13px 18px 0;
+  }
+  .circbtn {
+    flex: none; width: 33px; height: 33px; border-radius: 50%;
+    background: #fff; border: 0; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 4px 14px rgba(29,43,58,.08);
+    color: var(--navy);
+    text-decoration: none;
+  }
+  .topbar .ttl {
+    flex: 1; text-align: center;
+    font-size: 18.5px; font-weight: 700; color: #16273C;
+  }
+  .subtitle {
+    position: relative; z-index: 10;
+    margin: 9px 24px 0; text-align: center;
+    font-size: 11.5px; font-weight: 400; color: var(--text-2);
+  }
+
+  /* ---------- Hero score card ---------- */
+  .hero {
+    position: relative; z-index: 5;
+    margin: 13px 18px 0;
+    height: 216px;
+    border-radius: 18px;
+    background:
+      linear-gradient(180deg, rgba(255,255,255,.55), rgba(255,255,255,0) 55%),
+      url('assets/facescore-bg.png') center bottom / cover no-repeat,
+      linear-gradient(160deg, #FFFFFF 0%, #EAF5FE 100%);
+    box-shadow: var(--sh-card);
+    overflow: hidden;
+  }
+  .hero .halo { position: absolute; border-radius: 50%; pointer-events: none; }
+  .hero .model {
+    position: absolute; left: -26px; top: -30px; width: 290px; height: auto;
+    -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 82%, transparent 99%);
+            mask-image: linear-gradient(to bottom, #000 0%, #000 82%, transparent 99%);
+  }
+  /* customer's scanned photo: feathered alpha cutout over the ORIGINAL card art */
+  .hero .model.real {
+    left: 0; top: 0; width: 240px; height: 216px; object-fit: cover;
+    -webkit-mask-image: none; mask-image: none;
+  }
+  .pin {
+    position: absolute; width: 11px; height: 11px; border-radius: 50%;
+    background: #fff; border: 2.5px solid #2FAEF0;
+    box-shadow: 0 0 0 3px rgba(40,175,240,.18);
+    z-index: 3;
+  }
+  .pin::after {
+    content: ""; position: absolute; inset: 1.5px; border-radius: 50%;
+    background: #2FAEF0;
+  }
+  .dash { position: absolute; z-index: 2; pointer-events: none; }
+  .callout {
+    position: absolute; z-index: 4;
+    height: 23px; padding: 0 11px;
+    display: inline-flex; align-items: center;
+    background: rgba(255,255,255,.96);
+    border: 1px solid #DCEDF8;
+    border-radius: 999px;
+    box-shadow: 0 3px 10px rgba(29,43,58,.08);
+    font-size: 10.8px; font-weight: 500; color: #3D5A75;
+    white-space: nowrap;
+  }
+
+  .scorecol { position: absolute; left: 252px; top: 24px; width: 132px; z-index: 4; }
+  .scorecol .lbl { font-size: 12px; font-weight: 500; color: #44566B; white-space: nowrap; }
+  .scorenum { display: flex; align-items: flex-end; gap: 4px; margin-top: 2px; }
+  .scorenum .n {
+    font-family: var(--en); font-size: 64px; font-weight: 800;
+    line-height: 1.02; letter-spacing: -2px; color: #1E9FE9;
+  }
+  .scorenum .of { font-family: var(--en); font-size: 16px; font-weight: 500; color: #8295AB; padding-bottom: 8px; }
+  .grade {
+    margin-top: 9px;
+    display: inline-flex; align-items: center; gap: 8px;
+    height: 33px; padding: 0 16px;
+    border-radius: 14px;
+    background: rgba(236,248,255,.75);
+    border: 1.4px solid rgba(45,159,238,.55);
+  }
+  .grade .a { font-family: var(--en); font-size: 18px; font-weight: 700; color: #1E9FE9; }
+  .grade .t { font-size: 14px; font-weight: 600; color: #1E9FE9; }
+  .sym { margin-top: 13px; }
+  .sym .lbl { font-size: 11.5px; font-weight: 600; color: #2A3F57; white-space: nowrap; }
+  .symrow { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
+  .symbar { flex: 1; height: 4.5px; border-radius: 99px; background: #DCEEFA; overflow: hidden; }
+  .symbar .fill { width: 96%; height: 100%; border-radius: 99px; background: linear-gradient(90deg, #7ED0FA, #2D9FEE); }
+  .symrow .pct { font-family: var(--en); font-size: 13px; font-weight: 700; color: #1E9FE9; }
+
+  /* ---------- Section title ---------- */
+  .sect {
+    position: relative; z-index: 5;
+    margin: 17px 25px 0;
+    font-size: 19px; font-weight: 700; color: #16273C;
+  }
+
+  /* ---------- Recommendation cards ---------- */
+  .rec {
+    position: relative; z-index: 5;
+    margin: 10px 18px 0;
+    background: #fff;
+    border-radius: 18px;
+    box-shadow: var(--sh-card);
+    padding: 9px 10px 9px 9px;
+    display: flex; align-items: center; gap: 10px;
+    cursor: pointer;
+  }
+  .thumb {
+    flex: none; width: 66px; height: 58px;
+    border-radius: 12px; overflow: hidden;
+    position: relative; background: #F2F8FD;
+  }
+  .thumb img { position: absolute; display: block; }
+  .thumb svg.ovl { position: absolute; inset: 0; }
+  .rec .mid { flex: 1; min-width: 0; }
+  .rec .r1 { display: flex; align-items: center; gap: 6px; }
+  .num {
+    flex: none; width: 16.5px; height: 16.5px; border-radius: 50%;
+    border: 1.4px solid #2D9FEE;
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--en); font-size: 9.5px; font-weight: 700; color: #1E9FE9;
+  }
+  .rec h2 { font-size: 14px; font-weight: 700; color: #16273C; white-space: nowrap; }
+  .rec .d1 { margin-top: 3.5px; font-size: 10.6px; color: var(--text-2); white-space: nowrap; }
+  .rec .d2 { margin-top: 4px; display: flex; align-items: center; gap: 5px; font-size: 10.6px; color: #8295AB; white-space: nowrap; }
+  .rec .side { flex: none; display: flex; flex-direction: column; align-items: flex-end; gap: 3px; }
+  .pill { height: 19px; padding: 0 9px; border-radius: 999px; display: inline-flex; align-items: center; font-size: 9.6px; font-weight: 600; }
+  .pill.g { background: rgba(53,199,89,.13); color: var(--success); }
+  .pill.o { background: rgba(245,166,35,.15); color: var(--warning); }
+  .pill.b { background: rgba(40,165,238,.13); color: #1E9FE9; }
+  .rec .est { font-size: 9.6px; color: #8295AB; }
+  .qty { display: flex; align-items: baseline; gap: 3px; color: #1E9FE9; white-space: nowrap; }
+  .qty .v { font-family: var(--en); font-size: 15.5px; font-weight: 700; letter-spacing: -.2px; }
+  .qty .u { font-size: 10.5px; font-weight: 600; }
+  .rec .chev { flex: none; color: #B6C4D4; margin-left: 1px; }
+  /* G′ (filler-firmness) meter on each card */
+  .rec .gp { margin-top: 5px; display: flex; align-items: center; gap: 5px; white-space: nowrap; }
+  .gp .gpl { font-family: var(--en); font-size: 10px; font-weight: 800; color: #44566B; }
+  .gp .gpm { display: inline-flex; gap: 2.5px; }
+  .gp .gpm i { width: 9px; height: 5px; border-radius: 2px; background: #E2EDF6; }
+  .gp .gpm i.on { background: var(--gpc, #1E9FE9); }
+  .gp .gpt { font-size: 9.8px; font-weight: 600; color: var(--gpc, #1E9FE9); }
+  .sect-sub { position: relative; z-index: 5; margin: 3px 25px 0; font-size: 10.8px; color: var(--muted); line-height: 1.5; }
+
+  /* ---------- Summary ---------- */
+  .summary {
+    position: relative; z-index: 5;
+    margin: 12px 18px 0;
+    background: #fff; border-radius: 18px;
+    box-shadow: var(--sh-card);
+    padding: 11px 10px 10px 14px;
+  }
+  .summary .ttl { font-size: 13.5px; font-weight: 700; color: #16273C; }
+  .sumrow { display: flex; align-items: stretch; margin-top: 9px; }
+  .sumcol { flex: 1; display: flex; align-items: center; gap: 7px; padding: 2px 6px 2px 2px; min-width: 0; }
+  .sumcol + .sumcol { border-left: 1px solid #E7F1F8; padding-left: 10px; }
+  .sumcol svg { flex: none; }
+  .sumcol .lb { font-size: 9.3px; color: #8295AB; line-height: 1.35; white-space: nowrap; }
+  .sumcol .vl { margin-top: 1px; display: flex; align-items: baseline; gap: 3px; color: #1E9FE9; white-space: nowrap; }
+  .sumcol .vl .v { font-family: var(--en); font-size: 14.5px; font-weight: 700; }
+  .sumcol .vl .u { font-size: 10px; font-weight: 600; }
+  .sumcol .two { font-size: 9.3px; color: var(--text-2); line-height: 1.4; }
+
+  /* ---------- Budget estimate ---------- */
+  .budget {
+    position: relative; z-index: 5;
+    margin: 10px 18px 0;
+    background: #fff; border-radius: 18px;
+    box-shadow: var(--sh-card);
+    padding: 12px 14px 10px;
+  }
+  .budget .bhead { display: flex; align-items: center; justify-content: space-between; }
+  .budget .bttl { font-size: 13.5px; font-weight: 700; color: #16273C; }
+  .budget .rate {
+    height: 21px; padding: 0 10px; border-radius: 999px;
+    background: rgba(40,165,238,.13); color: var(--blue);
+    font-size: 10.5px; font-weight: 600; display: inline-flex; align-items: center;
+  }
+  .budget .brow { display: flex; align-items: baseline; gap: 8px; padding: 7.5px 0; border-bottom: 1px solid #EEF5FA; font-size: 12px; }
+  .budget .brow .bk { flex: 1; color: #44566B; min-width: 0; }
+  .budget .brow .bk .side { font-style: normal; color: var(--muted); font-size: 10.3px; }
+  .budget .brow .bc { font-family: var(--en); font-size: 10.8px; color: var(--muted); }
+  .budget .brow .bp { font-family: var(--en); font-size: 12px; font-weight: 600; color: #16273C; min-width: 104px; text-align: right; }
+  .budget .btotal { display: flex; justify-content: space-between; align-items: center; padding-top: 9px; font-size: 12.5px; font-weight: 600; color: #16273C; border-top: 1px dashed var(--border); }
+  .budget .btotal b { font-family: var(--en); font-size: 16.5px; font-weight: 800; color: var(--blue); letter-spacing: -.2px; }
+  .budget .bnote { margin-top: 6px; font-size: 9.8px; color: var(--muted); line-height: 1.5; }
+  /* clinical term beside each area name */
+  .rec .clin { font-family: var(--en); font-size: 9.5px; font-weight: 500; color: var(--muted); white-space: nowrap; }
+  /* methodology / evidence-basis card */
+  .method { position: relative; z-index: 5; margin: 12px 18px 0; background: #fff; border-radius: 18px; box-shadow: var(--sh-card); padding: 13px 15px; }
+  .method .mh { display: flex; align-items: center; gap: 7px; font-size: 13.5px; font-weight: 700; color: #16273C; }
+  .method .mlist { list-style: none; margin: 9px 0 0; padding: 0; }
+  .method .mlist li { position: relative; padding: 5px 0 5px 16px; font-size: 11px; color: var(--text-2); line-height: 1.5; border-bottom: 1px solid #F1F6FB; }
+  .method .mlist li:last-child { border-bottom: 0; }
+  .method .mlist li::before { content: ""; position: absolute; left: 2px; top: 11px; width: 5px; height: 5px; border-radius: 50%; background: #2D9FEE; }
+  .method .mlist li b { color: #16273C; font-weight: 600; }
+  .method .mnote { margin-top: 9px; background: #F2F9FE; border-radius: 11px; padding: 9px 11px; font-size: 10.3px; color: var(--text-2); line-height: 1.55; }
+  .method .mnote b { color: #16273C; }
+  /* measurement-confidence block */
+  .method .conf { }
+  .method .ch { display: flex; justify-content: space-between; align-items: baseline; }
+  .method .ch span { font-size: 12.5px; font-weight: 700; color: #16273C; }
+  .method .ch b { font-family: var(--en); font-size: 17px; font-weight: 800; }
+  .method .cbar { height: 7px; border-radius: 6px; background: #EAF1F8; overflow: hidden; margin: 7px 0 9px; }
+  .method .cbar i { display: block; height: 100%; border-radius: 6px; width: 0; }
+  .method .cfac { display: flex; flex-wrap: wrap; gap: 6px; }
+  .method .cfac .cf { display: inline-flex; align-items: center; gap: 4px; font-size: 10px; font-weight: 600; padding: 3px 9px; border-radius: 999px; }
+  .method .cfac .cf.ok { background: rgba(53,199,89,.13); color: var(--success); }
+  .method .cfac .cf.no { background: rgba(245,166,35,.16); color: var(--warning); }
+
+  /* ---------- Note ---------- */
+  .note {
+    position: relative; z-index: 5;
+    margin: 10px 18px 0;
+    background: #fff; border-radius: 15px;
+    box-shadow: var(--sh-card);
+    padding: 8px 13px;
+    display: flex; align-items: center; gap: 9px;
+  }
+  .note svg { flex: none; }
+  .note .tx { font-size: 10.3px; color: var(--text-2); line-height: 1.55; }
+
+  /* ---------- CTAs ---------- */
+  .cta-wrap { position: relative; z-index: 6; margin: 12px 18px 0; }
+  .cta {
+    width: 100%; height: 50px;
+    text-decoration: none;
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+    border: 0; cursor: pointer;
+    border-radius: 25px;
+    background: var(--grad-cta);
+    box-shadow: var(--sh-cta);
+    color: #fff; font-family: var(--th);
+    font-size: 17.5px; font-weight: 700;
+    position: relative; overflow: hidden;
+    transition: transform .18s cubic-bezier(.22,1,.36,1), box-shadow .18s cubic-bezier(.22,1,.36,1);
+  }
+  .cta::before {
+    content: ""; position: absolute; inset: 0;
+    background: linear-gradient(180deg, rgba(255,255,255,.32), rgba(255,255,255,0) 46%);
+    border-radius: inherit; pointer-events: none;
+  }
+  .cta:hover { transform: translateY(-1px); }
+  .cta:active { transform: translateY(1px) scale(.99); }
+  .cta:focus-visible, .ghost:focus-visible, .circbtn:focus-visible { outline: 3px solid rgba(45,159,238,.45); outline-offset: 3px; }
+  .ghost {
+    width: 100%; height: 46px; margin-top: 10px;
+    display: flex; align-items: center; justify-content: center; gap: 9px;
+    border: 0; cursor: pointer;
+    border-radius: 23px;
+    background: #fff;
+    box-shadow: var(--sh-card);
+    color: #1E9FE9; font-family: var(--th);
+    font-size: 15.5px; font-weight: 600;
+    transition: transform .18s cubic-bezier(.22,1,.36,1);
+  }
+  .ghost:hover { transform: translateY(-1px); }
+  .ghost:active { transform: translateY(1px); }
+
+  /* ---------- Toast ---------- */
+  .toast {
+    position: fixed; left: 50%; bottom: 26px;
+    transform: translateX(-50%) translateY(16px);
+    background: rgba(22,39,60,.94); color: #fff;
+    font-size: 12.5px; line-height: 1.45; text-align: center;
+    padding: 11px 20px; border-radius: 999px; max-width: 320px;
+    opacity: 0; pointer-events: none;
+    transition: opacity .25s, transform .25s;
+    z-index: 60;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  /* bottom tab bar (this page doesn't link arface.css) */
+  .tabwrap { position: sticky; bottom: 0; z-index: 20; margin-top: 10px; padding: 6px 20px 0; background: linear-gradient(to top, #FFFFFF 78%, rgba(255,255,255,0)); }
+  .tabbar { background: #fff; border-radius: 24px; box-shadow: 0 -5px 22px rgba(29,43,58,.06), 0 10px 26px rgba(29,43,58,.08); display: flex; padding: 9px 4px 6px; }
+  .tab { flex: 1; border: 0; background: none; cursor: pointer; text-decoration: none; display: flex; flex-direction: column; align-items: center; gap: 3px; font-family: var(--th); font-size: 10.5px; font-weight: 500; color: #94A5B8; padding: 1px 0; }
+  .tab.active { color: var(--blue); font-weight: 600; }
+  .tab svg { display: block; }
+  .tab .tdot { width: 4.5px; height: 4.5px; border-radius: 50%; background: var(--blue); margin-top: 1px; opacity: 0; }
+  .tab.active .tdot { opacity: 1; }
+  .home-indicator { width: 128px; height: 4.5px; border-radius: 3px; background: #0B0F14; margin: 7px auto 6px; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .cta, .ghost, .cta:hover, .cta:active, .ghost:hover, .ghost:active { transition: none; transform: none; }
+    .toast { transition: none; }
+  }
+</style>
+</head>
+<body>
+<div class="screen">
+
+  <!-- Status bar -->
+  <div class="statusbar" aria-hidden="true">
+    <span class="time">9:41</span>
+    <span style="display:flex; align-items:center; gap:6px;">
+      <svg width="18" height="11" viewBox="0 0 19 12" fill="#0B1B2B">
+        <rect x="0" y="7.5" width="3.4" height="4.5" rx="1"/><rect x="5" y="5" width="3.4" height="7" rx="1"/>
+        <rect x="10" y="2.5" width="3.4" height="9.5" rx="1"/><rect x="15" y="0" width="3.4" height="12" rx="1"/>
+      </svg>
+      <svg width="16" height="11" viewBox="0 0 17 12" fill="none" stroke="#0B1B2B" stroke-width="1.9" stroke-linecap="round">
+        <path d="M1.5 4.2a10.4 10.4 0 0 1 14 0"/><path d="M4.1 7a6.7 6.7 0 0 1 8.8 0"/><path d="M6.8 9.7a3 3 0 0 1 3.4 0"/>
+        <circle cx="8.5" cy="10.8" r="1" fill="#0B1B2B" stroke="none"/>
+      </svg>
+      <svg width="25" height="12" viewBox="0 0 26 12" fill="none">
+        <rect x="0.7" y="0.7" width="21" height="10.6" rx="3" stroke="#0B1B2B" stroke-opacity=".4" stroke-width="1"/>
+        <rect x="2.4" y="2.4" width="17.6" height="7.2" rx="1.8" fill="#0B1B2B"/>
+        <path d="M23.6 4v4a2.2 2.2 0 0 0 0-4Z" fill="#0B1B2B" fill-opacity=".4"/>
+      </svg>
+    </span>
+  </div>
+
+  <!-- Top bar -->
+  <header class="topbar">
+    <a class="circbtn" href="index.html" aria-label="ย้อนกลับ">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+    </a>
+    <h1 class="ttl">ผลลัพธ์ฟิลเลอร์</h1>
+    <button class="circbtn" id="btn-share" aria-label="แชร์ผลลัพธ์เป็นรูปภาพ">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#1E9FE9" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7M16 6l-4-4-4 4M12 2v14"/></svg>
+    </button>
+  </header>
+
+  <p class="subtitle">ผลวิเคราะห์จากการสแกนใบหน้า พร้อมคำแนะนำเบื้องต้นโดยประมาณ</p>
+
+  <main>
+  <!-- Hero score card -->
+  <section class="hero" aria-label="คะแนนความเหมาะสม">
+    <div class="halo" style="left:14px; top:-12px; width:196px; height:196px; border:1px solid rgba(126,220,255,.55);"></div>
+    <div class="halo" style="left:-12px; top:-38px; width:248px; height:248px; border:1px solid rgba(126,220,255,.35);"></div>
+
+    <img class="model" src="assets/model.png" alt="ใบหน้านางแบบพร้อมจุดแนะนำฟิลเลอร์">
+
+    <!-- dashed connectors -->
+    <svg class="dash" width="240" height="216" viewBox="0 0 240 216" fill="none" stroke="#7CC4EE" stroke-width="1.1" stroke-dasharray="3 3">
+      <path d="M70 64 L154 40.5 H174"/>
+      <path d="M104 92 L154 74.5 H174"/>
+      <path d="M116 126 L154 108.5 H174"/>
+      <path d="M122 150 L154 142.5 H174"/>
+      <path d="M128 178 L154 176.5 H174"/>
+    </svg>
+
+    <!-- pins -->
+    <span class="pin" style="left:64px; top:60px;"></span>
+    <span class="pin" style="left:104px; top:88px;"></span>
+    <span class="pin" style="left:116px; top:122px;"></span>
+    <span class="pin" style="left:122px; top:150px;"></span>
+    <span class="pin" style="left:128px; top:178px;"></span>
+
+    <!-- callout pills -->
+    <span class="callout" style="left:176px; top:29px;">ขมับ</span>
+    <span class="callout" style="left:176px; top:63px;">ใต้ตา</span>
+    <span class="callout" style="left:176px; top:97px;">ร่องแก้ม</span>
+    <span class="callout" style="left:176px; top:131px;">ปาก</span>
+    <span class="callout" style="left:176px; top:165px;">คาง</span>
+
+    <!-- score column -->
+    <div class="scorecol">
+      <div class="lbl">คะแนนความเหมาะสม</div>
+      <div class="scorenum"><span class="n">88</span><span class="of">/100</span></div>
+      <div class="grade"><span class="a">A</span><span class="t">ดีเยี่ยม</span></div>
+      <div class="sym">
+        <div class="lbl">ความสมมาตรใบหน้า</div>
+        <div class="symrow">
+          <div class="symbar"><div class="fill"></div></div>
+          <span class="pct">96%</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <h2 class="sect">แผนฟิลเลอร์ที่แนะนำ</h2>
+  <p class="sect-sub">G′ (จีไพรม์) = ระดับความแข็งของฟิลเลอร์ที่เหมาะกับแต่ละจุด — นุ่ม → แข็ง · แนะนำตามบริเวณ</p>
+
+  <!-- 1 ใต้ตา -->
+  <article class="rec">
+    <div class="thumb">
+      <img src="assets/model.png" alt="" style="width:420px; left:-166px; top:-132px;">
+      <svg class="ovl" viewBox="0 0 66 58" fill="none">
+        <path d="M14 34 Q30 28 48 32 Q49 40 33 43 Q18 43 14 34 Z" fill="rgba(120,200,250,.20)" stroke="#4FB2F2" stroke-width="1.2" stroke-dasharray="3.5 2.5"/>
+      </svg>
+    </div>
+    <div class="mid">
+      <div class="r1"><span class="num">1</span><h2>ใต้ตา</h2><span class="clin">Tear trough</span></div>
+      <div class="d1">ช่วยให้ใบหน้าดูสดใส ลดลุคอ่อนล้า</div>
+      <div class="d2">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#2D9EE8" stroke-width="1.9" stroke-linecap="round"><path d="M12 3l1.6 5.4L19 10l-5.4 1.6L12 17l-1.6-5.4L5 10l5.4-1.6L12 3Z"/></svg>
+        คืนความสดใส ลดความคล้ำใต้ตา
+      </div>
+      <div class="gp"></div>
+    </div>
+    <div class="side">
+      <span class="pill g">เหมาะระดับสูง</span>
+      <span class="est">ประมาณ</span>
+      <span class="qty"><span class="v">0.5 – 1.0</span><span class="u">cc / ข้าง</span></span>
+    </div>
+    <svg class="chev" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+  </article>
+
+  <!-- 2 ร่องแก้ม -->
+  <article class="rec">
+    <div class="thumb">
+      <img src="assets/model.png" alt="" style="width:300px; left:-117px; top:-155px;">
+      <svg class="ovl" viewBox="0 0 66 58" fill="none">
+        <path d="M30 14 Q40 20 41 32 Q41 42 33 44 Q26 42 27 30 Q27 20 30 14 Z" fill="rgba(120,200,250,.20)" stroke="#4FB2F2" stroke-width="1.2" stroke-dasharray="3.5 2.5"/>
+      </svg>
+    </div>
+    <div class="mid">
+      <div class="r1"><span class="num">2</span><h2>ร่องแก้ม</h2><span class="clin">Nasolabial fold</span></div>
+      <div class="d1">ช่วยให้ใบหน้าดูนุ่มนวลและสมดุลขึ้น</div>
+      <div class="d2">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#2D9EE8" stroke-width="1.9" stroke-linecap="round"><path d="M3 8c3-2.5 6-2.5 9 0s6 2.5 9 0M3 14c3-2.5 6-2.5 9 0s6 2.5 9 0"/></svg>
+        ลดร่องลึก ให้ผิวเรียบเนียน
+      </div>
+      <div class="gp"></div>
+    </div>
+    <div class="side">
+      <span class="pill o">เหมาะปานกลาง</span>
+      <span class="est">ประมาณ</span>
+      <span class="qty"><span class="v">0.5</span><span class="u">cc / ข้าง</span></span>
+    </div>
+    <svg class="chev" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+  </article>
+
+  <!-- 3 คาง -->
+  <article class="rec">
+    <div class="thumb">
+      <img src="assets/model.png" alt="" style="width:300px; left:-127px; top:-183px;">
+      <svg class="ovl" viewBox="0 0 66 58" fill="none">
+        <ellipse cx="31" cy="40" rx="13" ry="9" fill="rgba(120,200,250,.20)" stroke="#4FB2F2" stroke-width="1.2" stroke-dasharray="3.5 2.5"/>
+      </svg>
+    </div>
+    <div class="mid">
+      <div class="r1"><span class="num">3</span><h2>คาง</h2><span class="clin">Chin · Mentum</span></div>
+      <div class="d1">ช่วยปรับสัดส่วนใบหน้าให้เรียวและละมุนขึ้น</div>
+      <div class="d2">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#2D9EE8" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4c-1.5 3-1.5 6 0 9 1 2 2.6 3.6 5 5 2.4-1.4 4-3 5-5 1.5-3 1.5-6 0-9"/><path d="M9.5 14.5c.8.9 1.6 1.4 2.5 1.7.9-.3 1.7-.8 2.5-1.7"/></svg>
+        เสริมคางให้ได้สัดส่วน มิติชัดเจนขึ้น
+      </div>
+      <div class="gp"></div>
+    </div>
+    <div class="side">
+      <span class="pill b">สามารถจำลองผลลัพธ์</span>
+      <span class="est">ประมาณ</span>
+      <span class="qty"><span class="v">1.0</span><span class="u">cc</span></span>
+    </div>
+    <svg class="chev" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+  </article>
+
+  <!-- 4 ปาก -->
+  <article class="rec">
+    <div class="thumb">
+      <img src="assets/model.png" alt="" style="width:300px; left:-120px; top:-150px;">
+      <svg class="ovl" viewBox="0 0 66 58" fill="none">
+        <path d="M18 31 Q33 25 48 31 Q44 39 33 40 Q22 39 18 31 Z" fill="rgba(120,200,250,.20)" stroke="#4FB2F2" stroke-width="1.2" stroke-dasharray="3.5 2.5"/>
+      </svg>
+    </div>
+    <div class="mid">
+      <div class="r1"><span class="num">4</span><h2>ปาก</h2><span class="clin">Lips · Vermillion</span></div>
+      <div class="d1">เพิ่มความอิ่มเอิบ ให้ริมฝีปากดูมีมิติ</div>
+      <div class="d2">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#2D9EE8" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12c3-3.5 6-3.5 9 0 3 3.5 6 3.5 9 0"/><path d="M5 12c2.5 2.5 4.7 2.5 7 0 2.3-2.5 4.5-2.5 7 0"/></svg>
+        เติมวอลุ่ม ริมฝีปากดูอิ่มสวย
+      </div>
+      <div class="gp"></div>
+    </div>
+    <div class="side">
+      <span class="pill o">เหมาะปานกลาง</span>
+      <span class="est">ประมาณ</span>
+      <span class="qty"><span class="v">0.5 – 0.8</span><span class="u">cc</span></span>
+    </div>
+    <svg class="chev" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+  </article>
+
+  <!-- 5 ขมับ -->
+  <article class="rec">
+    <div class="thumb">
+      <img src="assets/model.png" alt="" style="width:300px; left:-92px; top:-120px;">
+      <svg class="ovl" viewBox="0 0 66 58" fill="none">
+        <ellipse cx="19" cy="23" rx="9.5" ry="12" fill="rgba(120,200,250,.20)" stroke="#4FB2F2" stroke-width="1.2" stroke-dasharray="3.5 2.5"/>
+      </svg>
+    </div>
+    <div class="mid">
+      <div class="r1"><span class="num">5</span><h2>ขมับ</h2><span class="clin">Temporal hollow</span></div>
+      <div class="d1">เติมเต็มขมับที่ตอบ ให้ใบหน้าดูเรียบเนียน</div>
+      <div class="d2">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#2D9EE8" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4c-4 1.5-6 4.5-6 8s2.6 6.5 6 8c3.4-1.5 6-4.5 6-8s-2-6.5-6-8Z"/></svg>
+        เติมขมับให้เต็ม ใบหน้าดูอ่อนเยาว์
+      </div>
+      <div class="gp"></div>
+    </div>
+    <div class="side">
+      <span class="pill o">เหมาะปานกลาง</span>
+      <span class="est">ประมาณ</span>
+      <span class="qty"><span class="v">1.0 – 2.0</span><span class="u">cc / ข้าง</span></span>
+    </div>
+    <svg class="chev" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+  </article>
+
+  <!-- Summary -->
+  <section class="summary" aria-label="สรุปโดยประมาณ">
+    <div class="ttl">สรุปโดยประมาณ</div>
+    <div class="sumrow">
+      <div class="sumcol">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2D9EE8" stroke-width="1.7" stroke-linecap="round">
+          <circle cx="12" cy="12" r="6.5"/><path d="M12 2.5v3.2M12 18.3v3.2M2.5 12h3.2M18.3 12h3.2"/><circle cx="12" cy="12" r="1.6" fill="#2D9EE8" stroke="none"/>
+        </svg>
+        <div>
+          <div class="lb">จุดที่แนะนำ</div>
+          <div class="vl"><span class="v">3</span><span class="u">จุด</span></div>
+        </div>
+      </div>
+      <div class="sumcol">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2D9EE8" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M13 6.5l4.5 4.5M14.5 5l1.6-1.6a1 1 0 0 1 1.4 0l3.1 3.1a1 1 0 0 1 0 1.4L19 9.5M12 7.5l-7.2 7.2a1.5 1.5 0 0 0-.4.8l-.6 3.6a.6.6 0 0 0 .7.7l3.6-.6a1.5 1.5 0 0 0 .8-.4L16.5 12"/><path d="M9.5 11l3.5 3.5"/>
+        </svg>
+        <div>
+          <div class="lb">รวมประมาณ</div>
+          <div class="vl"><span class="v">2.0 – 3.0</span><span class="u">cc</span></div>
+        </div>
+      </div>
+      <div class="sumcol">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2D9EE8" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 3l7 3v5c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6l7-3Z"/><path d="M9.2 12l2 2 3.6-3.8"/>
+        </svg>
+        <div class="two">ควรประเมินกับ<br>ผู้เชี่ยวชาญอีกครั้ง</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Budget estimate (filled from the real scan) -->
+  <section class="budget" id="budget" style="display:none" aria-label="ประเมินงบประมาณฟิลเลอร์">
+    <div class="bhead">
+      <div class="bttl">ประเมินงบประมาณ</div>
+      <span class="rate">5,000 บาท / cc</span>
+    </div>
+    <div id="budget-rows"></div>
+    <div class="btotal">
+      <span>รวมงบประมาณโดยประมาณ</span>
+      <b id="budget-total">—</b>
+    </div>
+    <div class="bnote">ประเมินจากปริมาณที่แนะนำสำหรับใบหน้าของคุณ ราคาจริงอาจแตกต่างตามคลินิกและยี่ห้อฟิลเลอร์</div>
+  </section>
+
+  <!-- Measurement confidence -->
+  <section class="method" id="conf" aria-label="ความมั่นใจการวัด" style="display:none">
+    <div class="conf">
+      <div class="ch"><span>ความมั่นใจการวัด</span><b id="conf-pct">—</b></div>
+      <div class="cbar"><i id="conf-fill"></i></div>
+      <div class="cfac" id="conf-fac"></div>
+    </div>
+  </section>
+
+  <!-- Note -->
+  <div class="note">
+    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#44566B" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 16v-4M12 8h.01"/></svg>
+    <div class="tx">ผลลัพธ์และปริมาณเป็นเพียงการจำลองเบื้องต้น ไม่ใช่คำวินิจฉัยทางการแพทย์<br>ควรปรึกษาผู้เชี่ยวชาญก่อนตัดสินใจ</div>
+  </div>
+
+  <!-- CTAs -->
+  <div class="cta-wrap">
+    <a class="cta" href="ba.html">
+      <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M4 8V6a2 2 0 0 1 2-2h2M16 4h2a2 2 0 0 1 2 2v2M20 16v2a2 2 0 0 1-2 2h-2M8 20H6a2 2 0 0 1-2-2v-2"/>
+        <path d="M12 8.2l1 2.6 2.6 1-2.6 1-1 2.6-1-2.6-2.6-1 2.6-1 1-2.6Z" fill="#fff" stroke="none"/>
+      </svg>
+      จำลองผลลัพธ์
+    </a>
+    <a class="ghost" href="analyze.html">
+      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#1E9FE9" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.6 5.4L19 10l-5.4 1.6L12 17l-1.6-5.4L5 10l5.4-1.6L12 3Z"/></svg>
+      วิเคราะห์ใบหน้า (ทรงหน้า · สมมาตร · สัดส่วนทอง)
+    </a>
+    <a class="ghost" href="clinics.html">
+      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#1E9FE9" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M6 6v13a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1V6"/><path d="M9 10h6M9 14h4"/></svg>
+      เทียบราคาคลินิก &amp; คำนวณงบ
+    </a>
+    <button class="ghost">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1E9FE9" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="7.2" r="3.4"/><path d="M5.5 20a6.5 6.5 0 0 1 13 0"/>
+        <circle cx="17.8" cy="16.2" r="3.1" fill="#fff"/><path d="M17.8 14.9v2.6M16.5 16.2h2.6"/>
+      </svg>
+      ปรึกษาผู้เชี่ยวชาญ
+    </button>
+  </div>
+  </main>
+  <nav data-ar="tabbar" data-active="result"></nav>
+</div>
+<div class="toast" id="toast" role="status"></div>
+<script src="assets/ui.js"></script>
+<script src="assets/result.js"></script>
+<script src="assets/fit.js"></script>
+</body>
+</html>

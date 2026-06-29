@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ARFACE Clinic — เวิร์กสเตชันวิเคราะห์ใบหน้า</title>
+<meta name="theme-color" content="#EAF5FD">
+<link rel="icon" type="image/png" sizes="32x32" href="assets/icons/favicon-32.png">
+<link rel="stylesheet" href="assets/fonts.css">
+<style>
+  /* tokens — identical to assets/arface.css so the clinic app is the same design family */
+  :root{
+    --cyan:#28BFEF; --blue:#1E9FE9; --blue-d:#1478C8; --navy:#16273C;
+    --text-2:#6F7F91; --muted:#8295AB; --border:#D8ECF7;
+    --success:#2FA152; --warning:#DF9117;
+    --th:'Noto Sans Thai',sans-serif; --en:'Inter','Noto Sans Thai',sans-serif;
+    --grad-cta:linear-gradient(110deg,#7ED0FA 0%,#4AB4F5 52%,#2D9FEE 100%);
+    --grad-screen:linear-gradient(180deg,#EAF5FD 0%,#F0F8FE 50%,#F6FBFF 100%);
+    --grad-tile:linear-gradient(160deg,#E7F5FF 0%,#D9F0FE 100%);
+    --sh-card:0 8px 22px rgba(29,43,58,.055);
+    --sh-cta:0 14px 26px rgba(45,159,238,.36),0 4px 10px rgba(45,159,238,.20);
+    --r-card:18px; --ease:cubic-bezier(.22,1,.36,1);
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{height:100%}
+  body{font-family:var(--th);color:var(--navy);background:var(--grad-screen);-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;overflow:hidden}
+  .app{display:grid;grid-template-rows:62px 1fr;height:100vh;min-width:1100px}
+
+  /* ---------- top bar ---------- */
+  .topbar{display:flex;align-items:center;gap:18px;padding:0 20px;background:rgba(255,255,255,.86);backdrop-filter:blur(8px);border-bottom:1px solid var(--border);z-index:5}
+  .brand{display:flex;align-items:center;gap:10px}
+  .brand .logo{width:32px;height:32px;border-radius:10px;background:var(--grad-cta);display:flex;align-items:center;justify-content:center;box-shadow:var(--sh-cta)}
+  .brand .logo svg{width:18px;height:18px}
+  .brand b{font-family:var(--en);font-weight:800;font-size:17px;letter-spacing:.2px;color:var(--navy)}
+  .brand .tag{font-size:10px;font-weight:600;color:var(--blue);background:rgba(235,247,255,.95);box-shadow:0 3px 10px rgba(45,159,238,.10);padding:3px 9px;border-radius:999px;letter-spacing:.4px}
+  .top-search{flex:1;max-width:440px;margin:0 auto;position:relative}
+  .top-search input{width:100%;height:40px;border:1px solid var(--border);background:#fff;border-radius:999px;padding:0 16px 0 40px;font-family:var(--th);font-size:13.5px;color:var(--navy);outline:none;box-shadow:var(--sh-card)}
+  .top-search input::placeholder{color:var(--muted)}
+  .top-search input:focus{box-shadow:0 0 0 3px rgba(45,159,238,.14)}
+  .top-search svg{position:absolute;left:14px;top:12px;width:16px;height:16px;color:var(--muted)}
+  .doc{display:flex;align-items:center;gap:11px}
+  .doc .nm{font-size:13px;font-weight:600;color:var(--navy);line-height:1.2;text-align:right}
+  .doc .nm small{display:block;font-size:10.5px;font-weight:400;color:var(--muted)}
+  .doc .av{width:36px;height:36px;border-radius:50%;background:var(--grad-cta);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;box-shadow:0 4px 12px rgba(45,159,238,.28)}
+  .icon-btn{width:38px;height:38px;border:0;background:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--text-2);cursor:pointer;box-shadow:var(--sh-card)}
+  .icon-btn:hover{color:var(--blue)}
+  .icon-btn svg{width:18px;height:18px}
+
+  /* ---------- body grid ---------- */
+  .body{display:grid;grid-template-columns:272px 1fr 410px;height:100%;min-height:0}
+
+  /* ---------- left rail: customers ---------- */
+  .rail{background:rgba(255,255,255,.5);border-right:1px solid var(--border);display:flex;flex-direction:column;min-height:0}
+  .rail .hd{display:flex;align-items:center;justify-content:space-between;padding:18px 18px 12px}
+  .rail .hd h2{font-size:15px;font-weight:700;color:var(--navy)}
+  .rail .hd .count{font-family:var(--en);font-size:11px;font-weight:600;color:var(--blue);background:rgba(235,247,255,.95);padding:2px 9px;border-radius:999px}
+  .rail .search{padding:0 16px 12px;position:relative}
+  .rail .search input{width:100%;height:38px;border:0;background:#fff;border-radius:12px;padding:0 12px 0 36px;font-family:var(--th);font-size:12.5px;outline:none;box-shadow:var(--sh-card);color:var(--navy)}
+  .rail .search input::placeholder{color:var(--muted)}
+  .rail .search svg{position:absolute;left:28px;top:11px;width:15px;height:15px;color:var(--muted)}
+  .new-btn{margin:0 16px 14px;height:46px;border:0;border-radius:23px;background:var(--grad-cta);color:#fff;font-family:var(--th);font-weight:700;font-size:14.5px;display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;box-shadow:var(--sh-cta)}
+  .new-btn svg{width:17px;height:17px}
+  .clist{flex:1;overflow:auto;padding:2px 12px 16px}
+  .cust{display:flex;align-items:center;gap:11px;padding:10px 11px;border-radius:14px;cursor:pointer;margin-bottom:4px;transition:background .16s var(--ease)}
+  .cust:hover{background:rgba(255,255,255,.7)}
+  .cust.on{background:#fff;box-shadow:var(--sh-card)}
+  .cust .ca{width:40px;height:40px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;color:#fff}
+  .cust .ci{flex:1;min-width:0}
+  .cust .ci .cn{font-size:13.5px;font-weight:600;color:var(--navy);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .cust .ci .cm{font-size:11px;color:var(--muted);margin-top:1px}
+  .cust .cb{font-family:var(--en);font-size:10px;font-weight:600;color:var(--blue);background:rgba(40,165,238,.1);padding:3px 8px;border-radius:999px}
+  .cust .cb.old{color:var(--muted);background:rgba(130,149,171,.12)}
+
+  /* ---------- center stage ---------- */
+  .center{display:flex;flex-direction:column;min-width:0;min-height:0;padding:20px;gap:16px}
+  .stage{flex:1;position:relative;background:var(--grad-tile);border-radius:24px;overflow:hidden;display:flex;align-items:center;justify-content:center;box-shadow:var(--sh-card);border:1px solid #fff}
+  .stage .face{height:100%;width:100%;object-fit:cover;object-position:center 26%}
+  .stage .vig{position:absolute;inset:0;background:radial-gradient(130% 90% at 50% 24%,rgba(255,255,255,0) 52%,rgba(208,236,251,.5) 100%);pointer-events:none}
+  .mesh{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;opacity:.7}
+  .chips{position:absolute;left:18px;top:16px;display:flex;gap:9px}
+  .chip{display:flex;align-items:center;gap:7px;background:rgba(255,255,255,.92);box-shadow:var(--sh-card);color:var(--navy);font-size:11.5px;font-weight:600;padding:6px 12px;border-radius:999px;font-family:var(--en)}
+  .chip .dot{width:7px;height:7px;border-radius:50%;background:#2FA152;box-shadow:0 0 7px rgba(47,161,82,.6)}
+  .chip.rec .dot{background:#F0556B;box-shadow:0 0 7px rgba(240,85,107,.6)}
+  .chip .lbl{font-family:var(--th);font-weight:600}
+  .chip .gpu{color:var(--success)}
+  .pin{position:absolute;width:13px;height:13px;border-radius:50%;border:2.5px solid var(--blue);background:rgba(126,208,250,.4);box-shadow:0 0 0 5px rgba(126,208,250,.16)}
+  .pin b{position:absolute;left:19px;top:-5px;white-space:nowrap;font-family:var(--th);font-size:11px;font-weight:600;color:var(--blue);background:rgba(255,255,255,.94);box-shadow:var(--sh-card);padding:3px 8px;border-radius:999px}
+  .quality{position:absolute;right:18px;top:16px;background:rgba(255,255,255,.92);box-shadow:var(--sh-card);border-radius:14px;padding:11px 14px;min-width:140px}
+  .quality .qr{display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:11px;margin:4px 0;font-weight:500;color:var(--text-2)}
+  .quality .qr b{font-family:var(--en);color:var(--success);font-weight:700;font-size:11px}
+
+  .controls{display:flex;align-items:center;gap:12px;flex:none}
+  .scan-btn{flex:1;height:56px;border:0;border-radius:28px;background:var(--grad-cta);color:#fff;font-family:var(--th);font-weight:700;font-size:17px;display:flex;align-items:center;justify-content:center;gap:11px;cursor:pointer;box-shadow:var(--sh-cta);position:relative;overflow:hidden;transition:transform .18s var(--ease)}
+  .scan-btn::before{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(255,255,255,.32),rgba(255,255,255,0) 46%);border-radius:inherit}
+  .scan-btn:hover{transform:translateY(-1px)}
+  .scan-btn svg{width:22px;height:22px}
+  .cbtn{height:56px;min-width:62px;padding:0 16px;border:0;background:#fff;border-radius:18px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer;color:var(--text-2);font-family:var(--th);font-size:10.5px;font-weight:600;box-shadow:var(--sh-card);transition:transform .18s var(--ease)}
+  .cbtn svg{width:20px;height:20px}
+  .cbtn:hover{transform:translateY(-1px);color:var(--blue)}
+  .cbtn.on{color:var(--blue);box-shadow:0 0 0 2px rgba(45,159,238,.5),var(--sh-card)}
+
+  /* ---------- right panel: analysis ---------- */
+  .panel{background:#fff;border-left:1px solid var(--border);display:flex;flex-direction:column;min-height:0}
+  .pt{padding:18px 20px 16px;border-bottom:1px solid #EEF5FB}
+  .pt .row{display:flex;align-items:center;gap:12px}
+  .pt .pa{width:48px;height:48px;border-radius:15px;flex:none;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:18px;color:#fff;background:linear-gradient(135deg,#F49BC0,#E8629A)}
+  .pt .pn{flex:1;min-width:0}
+  .pt .pn b{font-size:16.5px;font-weight:700;color:var(--navy)}
+  .pt .pn .meta{font-size:11.5px;color:var(--muted);margin-top:3px;display:flex;gap:11px;flex-wrap:wrap}
+  .pt .pn .meta i{font-style:normal}
+  .pt .pn .meta b{font-family:var(--en);font-size:11.5px;color:var(--text-2);font-weight:600}
+
+  .score{display:flex;align-items:center;gap:18px;padding:18px 20px}
+  .ring{position:relative;width:96px;height:96px;flex:none}
+  .ring svg{transform:rotate(-90deg)}
+  .ring .v{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+  .ring .v b{font-family:var(--en);font-size:29px;font-weight:800;color:var(--navy);line-height:1}
+  .ring .v small{font-size:10px;color:var(--muted);font-weight:500;margin-top:2px}
+  .score .sx{flex:1}
+  .grade{display:inline-flex;align-items:center;gap:7px;background:rgba(53,199,89,.13);border-radius:999px;padding:6px 13px}
+  .grade .a{font-family:var(--en);font-weight:800;font-size:17px;color:var(--success)}
+  .grade .t{font-size:13px;font-weight:600;color:var(--success)}
+  .symr{margin-top:12px}
+  .symr .l{display:flex;justify-content:space-between;font-size:11.5px;color:var(--text-2);margin-bottom:6px}
+  .symr .l b{font-family:var(--en);color:var(--blue);font-weight:700}
+  .symbar{height:8px;border-radius:999px;background:#EAF1F8;overflow:hidden}
+  .symbar i{display:block;height:100%;border-radius:999px;background:linear-gradient(90deg,#7ED0FA,#1E9FE9)}
+
+  .tabs{display:flex;gap:3px;padding:3px;margin:2px 20px 0;background:#EEF6FC;border-radius:13px}
+  .tab{flex:1;height:36px;border:0;background:none;border-radius:10px;font-family:var(--th);font-size:12.5px;font-weight:500;color:var(--text-2);cursor:pointer;transition:background .16s var(--ease),color .16s var(--ease)}
+  .tab.on{background:#fff;color:var(--blue);font-weight:600;box-shadow:0 3px 10px rgba(29,43,58,.08)}
+
+  .plan{flex:1;overflow:auto;padding:14px 20px 6px}
+  .plan h3{font-size:11.5px;font-weight:600;color:var(--muted);margin-bottom:6px}
+  .area{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid #F1F6FB}
+  .area .ic{width:36px;height:36px;border-radius:11px;flex:none;background:var(--grad-tile);display:flex;align-items:center;justify-content:center;color:var(--blue)}
+  .area .ic svg{width:18px;height:18px}
+  .area .ax{flex:1;min-width:0}
+  .area .ax .an{font-size:14px;font-weight:600;color:var(--navy)}
+  .area .ax .ad{font-size:11px;color:var(--muted);margin-top:2px}
+  .area .ay{text-align:right;flex:none}
+  .area .ay .cc{font-family:var(--en);font-size:13.5px;font-weight:700;color:var(--navy)}
+  .area .ay .cc small{font-size:9px;color:var(--muted);font-weight:600}
+  .area .ay .pr{font-family:var(--en);font-size:11px;color:var(--text-2);margin-top:1px}
+  .area .gp{margin-top:5px;display:flex;align-items:center;gap:6px;white-space:nowrap}
+  .area .gp .gpl{font-family:var(--en);font-size:10px;font-weight:800;color:#44566B}
+  .area .gp .gpm{display:inline-flex;gap:3px}
+  .area .gp .gpm i{width:10px;height:5px;border-radius:2px;background:#E2EDF6}
+  .area .gp .gpm i.on{background:var(--gpc,#1E9FE9)}
+  .area .gp .gpt{font-size:10px;font-weight:600;color:var(--gpc,#1E9FE9)}
+  .pill{display:inline-block;font-size:9.6px;font-weight:600;padding:2px 9px;border-radius:999px;margin-bottom:4px}
+  .pill.g{background:rgba(53,199,89,.13);color:var(--success)} .pill.o{background:rgba(245,166,35,.15);color:var(--warning)} .pill.b{background:rgba(40,165,238,.13);color:var(--blue)}
+
+  .summary{margin:10px 0 4px;background:var(--grad-tile);border-radius:var(--r-card);padding:15px}
+  .summary .sr{display:flex;justify-content:space-between;align-items:center;font-size:12.5px;color:var(--text-2);margin-bottom:8px}
+  .summary .sr b{font-family:var(--en);color:var(--navy);font-weight:700;font-size:13px}
+  .summary .total{display:flex;justify-content:space-between;align-items:baseline;border-top:1px dashed #B7DBF3;padding-top:11px;margin-top:3px}
+  .summary .total span{font-size:13px;font-weight:700;color:var(--navy)}
+  .summary .total b{font-family:var(--en);font-size:22px;font-weight:800;color:var(--blue);letter-spacing:-.3px}
+
+  .actions{flex:none;display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:16px 20px;border-top:1px solid #EEF5FB}
+  .act{height:46px;border:0;background:#fff;border-radius:14px;display:flex;align-items:center;justify-content:center;gap:8px;font-family:var(--th);font-size:12.5px;font-weight:600;color:var(--blue);cursor:pointer;box-shadow:var(--sh-card);transition:transform .18s var(--ease)}
+  .act svg{width:17px;height:17px}
+  .act:hover{transform:translateY(-1px)}
+  .act.primary{grid-column:1/3;background:var(--grad-cta);color:#fff;font-weight:700;font-size:14px;box-shadow:var(--sh-cta);position:relative;overflow:hidden}
+  .act.primary::before{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(255,255,255,.3),rgba(255,255,255,0) 46%)}
+  .act.primary svg{color:#fff}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- ============ top bar ============ -->
+  <header class="topbar">
+    <div class="brand">
+      <span class="logo"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8V6a2 2 0 0 1 2-2h2M16 4h2a2 2 0 0 1 2 2v2M20 16v2a2 2 0 0 1-2 2h-2M8 20H6a2 2 0 0 1-2-2v-2"/><circle cx="12" cy="12" r="3"/></svg></span>
+      <b>ARFACE</b><span class="tag">CLINIC</span>
+    </div>
+    <div class="top-search">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg>
+      <input placeholder="ค้นหาลูกค้า / HN / เบอร์โทร…">
+    </div>
+    <div class="doc">
+      <div class="nm">พญ. ณิชา ภูวดล<small>แพทย์ผู้ทำหัตถการ</small></div>
+      <div class="av">ณ</div>
+      <button class="icon-btn" title="ตั้งค่า"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-2.7 1.1V21a2 2 0 0 1-4 0v-.1A1.6 1.6 0 0 0 7 19.4a1.6 1.6 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.6 1.6 0 0 0-1.1-2.7H1a2 2 0 0 1 0-4h.1A1.6 1.6 0 0 0 4.6 7a1.6 1.6 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.6 1.6 0 0 0 1.8.3H9a1.6 1.6 0 0 0 1-1.5V1a2 2 0 0 1 4 0v.1A1.6 1.6 0 0 0 15 4.6a1.6 1.6 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0-.3 1.8V9a1.6 1.6 0 0 0 1.5 1H21a2 2 0 0 1 0 4h-.1a1.6 1.6 0 0 0-1.5 1Z"/></svg></button>
+    </div>
+  </header>
+
+  <div class="body">
+
+    <!-- ============ left rail ============ -->
+    <aside class="rail">
+      <div class="hd"><h2>ลูกค้า</h2><span class="count">128 คน</span></div>
+      <div class="search">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg>
+        <input placeholder="ค้นหาในรายชื่อ…">
+      </div>
+      <button class="new-btn"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg> เพิ่มลูกค้าใหม่</button>
+      <div class="clist">
+        <div class="cust on">
+          <div class="ca" style="background:linear-gradient(135deg,#F49BC0,#E8629A)">พ</div>
+          <div class="ci"><div class="cn">พิมพ์ลดา ศรีสุข</div><div class="cm">HN 00231 · อายุ 29</div></div>
+          <span class="cb">วันนี้</span>
+        </div>
+        <div class="cust">
+          <div class="ca" style="background:linear-gradient(135deg,#8FBEF4,#3F7FE0)">ก</div>
+          <div class="ci"><div class="cn">กันต์ธีร์ วงศ์ไพศาล</div><div class="cm">HN 00229 · อายุ 34</div></div>
+          <span class="cb old">3 มิ.ย.</span>
+        </div>
+        <div class="cust">
+          <div class="ca" style="background:linear-gradient(135deg,#86DBC6,#34A88E)">ม</div>
+          <div class="ci"><div class="cn">มนัสนันท์ จันทร์เพ็ญ</div><div class="cm">HN 00224 · อายุ 41</div></div>
+          <span class="cb old">28 พ.ค.</span>
+        </div>
+        <div class="cust">
+          <div class="ca" style="background:linear-gradient(135deg,#F6C078,#E8902F)">ธ</div>
+          <div class="ci"><div class="cn">ธนวัฒน์ อัศวโชค</div><div class="cm">HN 00219 · อายุ 27</div></div>
+          <span class="cb old">21 พ.ค.</span>
+        </div>
+        <div class="cust">
+          <div class="ca" style="background:linear-gradient(135deg,#BCA4F4,#7E5BD6)">ศ</div>
+          <div class="ci"><div class="cn">ศุภิสรา ตันติพงษ์</div><div class="cm">HN 00210 · อายุ 36</div></div>
+          <span class="cb old">14 พ.ค.</span>
+        </div>
+        <div class="cust">
+          <div class="ca" style="background:linear-gradient(135deg,#74CDEC,#2D9EE8)">อ</div>
+          <div class="ci"><div class="cn">อชิรญา เกียรติสุข</div><div class="cm">HN 00204 · อายุ 31</div></div>
+          <span class="cb old">9 พ.ค.</span>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ============ center stage ============ -->
+    <main class="center">
+      <div class="stage">
+        <img class="face" src="assets/model.png" alt="ใบหน้าลูกค้า">
+        <div class="vig"></div>
+        <svg class="mesh" viewBox="0 0 400 460" fill="none" stroke="#2D9EE8" stroke-width="0.7" opacity="0.6">
+          <path d="M150 150 L200 140 L250 150 M140 190 L200 175 L260 190 M150 235 L200 220 L250 235 M165 280 L200 270 L235 280 M175 320 L200 312 L225 320"/>
+          <path d="M150 150 L140 190 L150 235 L165 280 L175 320 M250 150 L260 190 L250 235 L235 280 L225 320"/>
+          <path d="M200 140 L200 175 L200 220 L200 270 L200 312 L200 350"/>
+          <path d="M168 168 L185 165 L200 168 M232 168 L215 165 L200 168 M160 205 L200 195 L240 205"/>
+        </svg>
+        <div class="chips">
+          <span class="chip rec"><span class="dot"></span>กำลังสแกน</span>
+          <span class="chip"><span class="dot"></span><span class="lbl">478 จุด</span></span>
+          <span class="chip"><span class="gpu">GPU · 60 FPS</span></span>
+        </div>
+        <div class="quality">
+          <div class="qr"><span>ระยะ/ตำแหน่ง</span><b>ดี</b></div>
+          <div class="qr"><span>แสงสว่าง</span><b>ดีมาก</b></div>
+          <div class="qr"><span>ความคมชัด</span><b>1080p</b></div>
+        </div>
+        <span class="pin" style="left:38%;top:40%"><b>ใต้ตา</b></span>
+        <span class="pin" style="left:30%;top:34%"></span>
+        <span class="pin" style="left:44%;top:55%"><b>ร่องแก้ม</b></span>
+        <span class="pin" style="left:50%;top:70%"><b>ปาก</b></span>
+        <span class="pin" style="left:50%;top:84%"><b>คาง</b></span>
+      </div>
+      <div class="controls">
+        <button class="scan-btn"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8V6a2 2 0 0 1 2-2h2M17 4h2a2 2 0 0 1 2 2v2M21 16v2a2 2 0 0 1-2 2h-2M7 20H5a2 2 0 0 1-2-2v-2"/><circle cx="12" cy="12" r="3.2"/></svg> สแกนใบหน้า</button>
+        <button class="cbtn on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>AR</button>
+        <button class="cbtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8V5a2 2 0 0 0-2-2h-3M3 16v3a2 2 0 0 0 2 2h3M16 21h3a2 2 0 0 0 2-2v-3M8 3H5a2 2 0 0 0-2 2v3"/></svg>ถ่ายใหม่</button>
+        <button class="cbtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 7l-7 5 7 5V7Z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>กล้อง</button>
+      </div>
+    </main>
+
+    <!-- ============ right panel ============ -->
+    <aside class="panel">
+      <div class="pt">
+        <div class="row">
+          <div class="pa">พ</div>
+          <div class="pn">
+            <b>พิมพ์ลดา ศรีสุข</b>
+            <div class="meta"><i>HN <b>00231</b></i><i>อายุ <b>29</b></i><i>สแกนล่าสุด <b>วันนี้ 14:20</b></i></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="score">
+        <div class="ring">
+          <svg width="96" height="96" viewBox="0 0 96 96">
+            <circle cx="48" cy="48" r="42" fill="none" stroke="#EAF1F8" stroke-width="9"/>
+            <circle cx="48" cy="48" r="42" fill="none" stroke="url(#g1)" stroke-width="9" stroke-linecap="round" stroke-dasharray="263.9" stroke-dashoffset="31.7"/>
+            <defs><linearGradient id="g1" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7ED0FA"/><stop offset="1" stop-color="#1E9FE9"/></linearGradient></defs>
+          </svg>
+          <div class="v"><b>88</b><small>/ 100</small></div>
+        </div>
+        <div class="sx">
+          <div class="grade"><span class="a">A</span><span class="t">ดีเยี่ยม</span></div>
+          <div class="symr">
+            <div class="l"><span>ความสมมาตรใบหน้า</span><b>96%</b></div>
+            <div class="symbar"><i style="width:96%"></i></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="tabs">
+        <button class="tab on" data-tab="filler">แผนฟิลเลอร์</button>
+        <button class="tab" data-tab="skin">ผิว</button>
+        <button class="tab" data-tab="ba">ก่อน/หลัง</button>
+      </div>
+
+      <div class="plan">
+        <h3>แผนฟิลเลอร์ที่แนะนำ · วัดจริงจากใบหน้า</h3>
+
+        <div class="area">
+          <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M2 12s3.5-6 10-6 10 6 10 6"/><circle cx="12" cy="12" r="2.4"/></svg></div>
+          <div class="ax"><span class="pill g">เหมาะระดับสูง</span><div class="an">ใต้ตา</div><div class="ad">ลดความคล้ำ คืนความสดใส</div><div class="gp" style="--gpc:#1E9FE9" title="ผิวใต้ตาบางมาก ต้องนุ่มและกระจายเนียน เพื่อไม่เป็นก้อนหรือกักน้ำจนบวม"><span class="gpl">G′</span><span class="gpm"><i class="on"></i><i></i><i></i><i></i><i></i></span><span class="gpt">ต่ำ · นุ่มพิเศษ</span></div></div>
+          <div class="ay"><div class="cc">0.8–1.0 <small>cc/ข้าง</small></div><div class="pr">฿8,000–10,000</div></div>
+        </div>
+
+        <div class="area">
+          <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M4 8c3-2 5-2 8 0s5 2 8 0M4 15c3-2 5-2 8 0s5 2 8 0"/></svg></div>
+          <div class="ax"><span class="pill o">เหมาะปานกลาง</span><div class="an">ร่องแก้ม</div><div class="ad">ลดร่องลึก ผิวเรียบเนียน</div><div class="gp" style="--gpc:#DF9117" title="ลดร่องลึกแต่ยังกลมกลืนเนียน ไม่แข็งเป็นสัน"><span class="gpl">G′</span><span class="gpm"><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i></span><span class="gpt">กลาง · สมดุล</span></div></div>
+          <div class="ay"><div class="cc">0.5–0.8 <small>cc/ข้าง</small></div><div class="pr">฿5,000–8,000</div></div>
+        </div>
+
+        <div class="area">
+          <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4c-1.5 3-1.5 7 0 10 1 2 2.8 3.6 5 5 2.2-1.4 4-3 5-5 1.5-3 1.5-7 0-10"/></svg></div>
+          <div class="ax"><span class="pill o">เหมาะปานกลาง</span><div class="an">คาง</div><div class="ad">เสริมสัดส่วน มิติชัดขึ้น</div><div class="gp" style="--gpc:#E8624A" title="ต้องการแรงยกและคงรูป เพื่อโปรเจกชันคางที่ชัดและทนทาน"><span class="gpl">G′</span><span class="gpm"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i></span><span class="gpt">สูง · แข็งอยู่ตัว</span></div></div>
+          <div class="ay"><div class="cc">1.0–1.5 <small>cc</small></div><div class="pr">฿5,000–7,500</div></div>
+        </div>
+
+        <div class="area">
+          <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12c3-3.5 6-3.5 9 0 3 3.5 6 3.5 9 0M5 12c2.5 2.5 4.5 2.5 7 0 2.5-2.5 4.5-2.5 7 0"/></svg></div>
+          <div class="ax"><span class="pill o">เหมาะปานกลาง</span><div class="an">ปาก</div><div class="ad">เพิ่มวอลุ่ม ริมฝีปากอิ่ม</div><div class="gp" style="--gpc:#1E9FE9" title="ริมฝีปากขยับตลอดเวลา ต้องยืดหยุ่นตามธรรมชาติและสัมผัสนุ่ม"><span class="gpl">G′</span><span class="gpm"><i class="on"></i><i class="on"></i><i></i><i></i><i></i></span><span class="gpt">ต่ำ–กลาง · นุ่ม ยืดหยุ่น</span></div></div>
+          <div class="ay"><div class="cc">0.5–0.8 <small>cc</small></div><div class="pr">฿2,500–4,000</div></div>
+        </div>
+
+        <div class="area">
+          <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4C8 5.5 6 8.5 6 12s2 6.5 6 8c4-1.5 6-4.5 6-8s-2-6.5-6-8Z"/></svg></div>
+          <div class="ax"><span class="pill o">เหมาะปานกลาง</span><div class="an">ขมับ</div><div class="ad">เติมเต็มขมับตอบ ดูอ่อนเยาว์</div><div class="gp" style="--gpc:#E8624A" title="เติมวอลุ่มขมับที่ตอบ และพยุงโครงสร้างด้านข้างใบหน้า"><span class="gpl">G′</span><span class="gpm"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i></span><span class="gpt">กลาง–สูง · พยุงโครง</span></div></div>
+          <div class="ay"><div class="cc">1.0–2.0 <small>cc/ข้าง</small></div><div class="pr">฿10,000–20,000</div></div>
+        </div>
+
+        <div class="summary">
+          <div class="sr"><span>จุดที่แนะนำ</span><b>5 จุด</b></div>
+          <div class="sr"><span>ปริมาณรวมโดยประมาณ</span><b>6.1–9.9 cc</b></div>
+          <div class="total"><span>งบประมาณโดยประมาณ</span><b>฿30,500–49,500</b></div>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button class="act primary"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2Z"/><path d="M17 21v-8H7v8M7 3v5h8"/></svg> บันทึกเข้าประวัติลูกค้า</button>
+        <button class="act"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6M9 13h6M9 17h6"/></svg> รายงาน PDF</button>
+        <button class="act"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2M6 14h12v8H6Z"/></svg> พิมพ์</button>
+      </div>
+    </aside>
+
+  </div>
+</div>
+<script src="assets/clinic.js"></script>
+</body>
+</html>

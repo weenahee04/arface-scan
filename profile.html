@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>ARFACE — โปรไฟล์</title>
+<meta name="theme-color" content="#EAF5FD">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob: data:; font-src 'self'; connect-src 'self'; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/png" sizes="32x32" href="assets/icons/favicon-32.png">
+<link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png">
+<link rel="stylesheet" href="assets/fonts.css">
+<link rel="stylesheet" href="assets/arface.css">
+<style>
+  .screen { background: linear-gradient(180deg, #EAF6FF 0%, #F5FBFF 34%, #FFFFFF 72%); }
+  .head { position: relative; z-index: 10; margin: 14px 24px 4px; }
+  .head h1 { font-size: 24px; font-weight: 800; color: #122036; letter-spacing: -.3px; }
+
+  /* profile header card */
+  .pcard { position: relative; z-index: 5; margin: 12px 18px 0; display: flex; align-items: center; gap: 14px; background: #fff; border-radius: 20px; box-shadow: var(--sh-card); padding: 16px; }
+  .av { position: relative; flex: none; width: 72px; height: 72px; border-radius: 50%; overflow: hidden; background: var(--grad-tile); display: flex; align-items: center; justify-content: center; cursor: pointer; border: 2px solid #fff; box-shadow: 0 3px 10px rgba(40,191,239,.2); }
+  .av img { width: 100%; height: 100%; object-fit: cover; display: none; }
+  .av .edit { position: absolute; right: -1px; bottom: -1px; width: 24px; height: 24px; border-radius: 50%; background: var(--blue); border: 2px solid #fff; display: flex; align-items: center; justify-content: center; }
+  .pcard .pm { flex: 1; min-width: 0; }
+  .pcard .nm { display: inline-flex; align-items: center; gap: 7px; font-size: 18px; font-weight: 700; color: #16273C; cursor: pointer; }
+  .pcard .sub { font-size: 12px; color: var(--text-2); margin-top: 3px; }
+
+  .sect { position: relative; z-index: 5; margin: 22px 24px 10px; font-size: 16px; font-weight: 700; color: #16273C; }
+
+  /* last scan card */
+  .last { position: relative; z-index: 5; margin: 0 18px; }
+  .last .card-p { background: #fff; border-radius: 18px; box-shadow: var(--sh-card); padding: 16px; display: flex; align-items: center; gap: 14px; }
+  .last .sc { flex: none; text-align: center; }
+  .last .sc .n { font-family: var(--en); font-size: 36px; font-weight: 800; color: var(--blue); line-height: 1; }
+  .last .sc .l { font-size: 10px; color: var(--muted); margin-top: 2px; }
+  .last .mid { flex: 1; min-width: 0; }
+  .last .mid .g { display: inline-flex; align-items: center; gap: 7px; }
+  .last .mid .g b { font-family: var(--en); font-size: 15px; color: var(--blue); }
+  .last .mid .g span { font-size: 13px; font-weight: 600; color: var(--blue); }
+  .last .mid .d { font-size: 11.5px; color: var(--text-2); margin-top: 4px; }
+  .last .go { flex: none; width: 34px; height: 34px; border-radius: 50%; background: var(--border); display: flex; align-items: center; justify-content: center; text-decoration: none; }
+  .empty { background: #fff; border-radius: 18px; box-shadow: var(--sh-card); padding: 24px 18px; text-align: center; }
+  .empty .ic { width: 56px; height: 56px; border-radius: 50%; background: #E3F3FE; display: inline-flex; align-items: center; justify-content: center; }
+  .empty .t { font-weight: 700; font-size: 15px; margin-top: 10px; color: #16273C; }
+  .empty .s { font-size: 12px; color: var(--text-2); margin-top: 4px; line-height: 1.5; }
+
+  /* history strip */
+  .hist { position: relative; z-index: 5; margin: 0 0 0 18px; display: flex; gap: 11px; overflow-x: auto; padding-right: 18px; scrollbar-width: none; }
+  .hist::-webkit-scrollbar { display: none; }
+  .hcell { flex: none; width: 96px; }
+  .hcell .ph { width: 96px; height: 86px; border-radius: 14px; overflow: hidden; background: #EAF4FC; box-shadow: var(--sh-card); position: relative; }
+  .hcell .ph img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .hcell .ph .b { position: absolute; left: 6px; bottom: 6px; height: 20px; padding: 0 7px; border-radius: 999px; background: rgba(22,39,60,.7); color: #fff; font-family: var(--en); font-size: 11px; font-weight: 700; display: flex; align-items: center; }
+  .hcell .dt { font-size: 10.5px; color: var(--text-2); margin-top: 5px; text-align: center; }
+
+  /* menu */
+  .menu { position: relative; z-index: 5; margin: 0 18px; background: #fff; border-radius: 18px; box-shadow: var(--sh-card); overflow: hidden; }
+  .mrow { display: flex; align-items: center; gap: 12px; padding: 15px 16px; border-bottom: 1px solid #EEF5FA; cursor: pointer; background: none; border-left: 0; border-right: 0; border-top: 0; width: 100%; font-family: var(--th); text-align: left; }
+  .mrow:last-child { border-bottom: 0; }
+  .mrow .mi { flex: none; width: 34px; height: 34px; border-radius: 11px; background: var(--grad-tile); display: flex; align-items: center; justify-content: center; }
+  .mrow .ml { flex: 1; font-size: 14px; font-weight: 500; color: #16273C; }
+  .mrow.danger .ml { color: #D5483B; }
+  .mrow.danger .mi { background: rgba(213,72,59,.1); }
+
+  .privacy { position: relative; z-index: 5; margin: 14px 24px 0; display: flex; align-items: center; justify-content: center; gap: 7px; font-size: 11px; color: var(--muted); }
+
+  .toast { position: fixed; left: 50%; bottom: 26px; transform: translateX(-50%) translateY(16px); background: rgba(22,39,60,.94); color: #fff; font-size: 12.5px; text-align: center; padding: 11px 20px; border-radius: 999px; max-width: 320px; opacity: 0; pointer-events: none; transition: opacity .25s, transform .25s; z-index: 60; }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  @media (prefers-reduced-motion: reduce) { .toast { transition: none; } }
+</style>
+</head>
+<body>
+<div class="screen">
+  <div class="statusbar" aria-hidden="true">
+    <span class="time">9:41</span>
+    <span style="display:flex; align-items:center; gap:6px;">
+      <svg width="18" height="11" viewBox="0 0 19 12" fill="#0B1B2B"><rect x="0" y="7.5" width="3.4" height="4.5" rx="1"/><rect x="5" y="5" width="3.4" height="7" rx="1"/><rect x="10" y="2.5" width="3.4" height="9.5" rx="1"/><rect x="15" y="0" width="3.4" height="12" rx="1"/></svg>
+      <svg width="16" height="11" viewBox="0 0 17 12" fill="none" stroke="#0B1B2B" stroke-width="1.9" stroke-linecap="round"><path d="M1.5 4.2a10.4 10.4 0 0 1 14 0"/><path d="M4.1 7a6.7 6.7 0 0 1 8.8 0"/><path d="M6.8 9.7a3 3 0 0 1 3.4 0"/><circle cx="8.5" cy="10.8" r="1" fill="#0B1B2B" stroke="none"/></svg>
+      <svg width="25" height="12" viewBox="0 0 26 12" fill="none"><rect x="0.7" y="0.7" width="21" height="10.6" rx="3" stroke="#0B1B2B" stroke-opacity=".4" stroke-width="1"/><rect x="2.4" y="2.4" width="17.6" height="7.2" rx="1.8" fill="#0B1B2B"/><path d="M23.6 4v4a2.2 2.2 0 0 0 0-4Z" fill="#0B1B2B" fill-opacity=".4"/></svg>
+    </span>
+  </div>
+
+  <header class="head"><h1>โปรไฟล์</h1></header>
+
+  <main>
+  <section class="pcard">
+    <div class="av" id="av" role="button" tabindex="0" aria-label="เปลี่ยนรูปโปรไฟล์">
+      <img id="av-img" alt="">
+      <svg id="av-ic" width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#2D9EE8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.6"/><path d="M5 20a7 7 0 0 1 14 0"/></svg>
+      <span class="edit"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg></span>
+    </div>
+    <div class="pm">
+      <span class="nm" id="pf-name">ผู้ใช้ ARFACE
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#8295AB" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+      </span>
+      <div class="sub" id="pf-sub">แตะเพื่อตั้งชื่อ · ข้อมูลเก็บบนเครื่องนี้</div>
+    </div>
+    <input type="file" id="av-file" accept="image/*" hidden>
+  </section>
+
+  <div class="sect">ผลสแกนล่าสุด</div>
+  <div class="last" id="last"></div>
+
+  <div class="sect" id="hist-title" style="display:none">ประวัติการสแกน</div>
+  <div class="hist" id="hist"></div>
+
+  <div class="sect">บัญชี & ความเป็นส่วนตัว</div>
+  <nav class="menu">
+    <button class="mrow" id="m-scan">
+      <span class="mi"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#2D9EE8" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8V6a2 2 0 0 1 2-2h2M16 4h2a2 2 0 0 1 2 2v2M20 16v2a2 2 0 0 1-2 2h-2M8 20H6a2 2 0 0 1-2-2v-2"/><circle cx="12" cy="11" r="2.6"/></svg></span>
+      <span class="ml">สแกนใบหน้าใหม่</span>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#B6C4D4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+    </button>
+    <button class="mrow" id="m-privacy">
+      <span class="mi"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#2D9EE8" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v5c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6l7-3Z"/><path d="M9.2 12l2 2 3.6-3.8"/></svg></span>
+      <span class="ml">ความเป็นส่วนตัว</span>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#B6C4D4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+    </button>
+    <button class="mrow danger" id="m-clear">
+      <span class="mi"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#D5483B" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M6 7l1 13a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-13"/></svg></span>
+      <span class="ml">ล้างข้อมูลทั้งหมด</span>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#E0A6A0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+    </button>
+  </nav>
+
+  <div class="privacy">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#8295AB" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v5c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6l7-3Z"/></svg>
+    ข้อมูลและรูปทั้งหมดเก็บบนเครื่องของคุณเท่านั้น
+  </div>
+  </main>
+
+  <nav data-ar="tabbar" data-active="profile"></nav>
+</div>
+<div class="toast" id="toast" role="status"></div>
+
+<script type="module" src="assets/profile.js"></script>
+<script src="assets/ui.js"></script>
+<script src="assets/sw-register.js"></script>
+<script src="assets/fit.js"></script>
+</body>
+</html>

@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>ARFACE — สแกนใบหน้า เพื่อความงามที่เข้าใจคุณ</title>
+<meta name="theme-color" content="#EAF5FD">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob: data:; font-src 'self'; connect-src 'self'; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/png" sizes="32x32" href="assets/icons/favicon-32.png">
+<link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png">
+<link rel="stylesheet" href="assets/fonts.css">
+<style>
+  /* Canvas-exact build: reference mockup is 941x1672; all values = ref / 2.188 (430px width) */
+  :root {
+    --cyan:   #28BFEF;
+    --blue:   #1E9FE9;
+    --navy:   #16273C;
+    --text-2: #6F7F91;
+    --muted:  #8295AB;
+    --border: #D8ECF7;
+    --th: 'Noto Sans Thai', sans-serif;
+    --en: 'Inter', 'Noto Sans Thai', sans-serif;
+    --grad-cta: linear-gradient(110deg, #7ED0FA 0%, #4AB4F5 52%, #2D9FEE 100%);
+    --sh-card: 0 8px 22px rgba(29,43,58,.055);
+    --sh-cta:  0 14px 26px rgba(45,159,238,.36), 0 4px 10px rgba(45,159,238,.20);
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html, body { background:#E2EAF1; }
+  body {
+    font-family: var(--th);
+    color: var(--navy);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    display: flex;
+    justify-content: center;
+    padding: 28px 0;
+    min-height: 100vh;
+  }
+
+  /* ---------- Phone canvas ---------- */
+  .screen {
+    position: relative;
+    width: 430px;
+    flex: none;
+    background: linear-gradient(180deg, #EAF5FD 0%, #F3FAFF 46%, #FFFFFF 70%);
+    overflow: hidden;
+    border-radius: 30px;
+    box-shadow: 0 30px 80px rgba(22,39,60,.22);
+  }
+  @media (max-width: 480px) {
+    body { padding: 0; background:#fff; }
+    .screen { width: 100%; border-radius: 0; box-shadow: none; min-height: 100vh; }
+  }
+
+  /* Full-canvas background art (941x1672 layer -> 430x764) */
+  .bg-art {
+    position: absolute; top: 0; left: 0; width: 100%; height: auto;
+    z-index: 0; pointer-events: none;
+  }
+
+  /* ---------- Hero decoration (canvas-absolute) ---------- */
+  .model {
+    position: absolute; top: -12px; right: -67px; width: 411px; height: auto;
+    z-index: 1; pointer-events: none;
+    -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 52%, transparent 61%);
+            mask-image: linear-gradient(to bottom, #000 0%, #000 52%, transparent 61%);
+  }
+  .mesh { position: absolute; top: 94px; right: 48px; z-index: 2; pointer-events: none; }
+  .brackets { position: absolute; top: 84px; right: 32px; width: 167px; height: 170px; z-index: 3; pointer-events: none; }
+  .brackets svg { position: absolute; }
+
+  /* ---------- Status bar ---------- */
+  .statusbar { position: relative; z-index: 10; height: calc(env(safe-area-inset-top, 0px) + 8px); }
+  .statusbar > * { display: none !important; }
+  .statusbar .time { font-size: 15.5px; font-weight: 600; letter-spacing: .1px; color: #0B1B2B; }
+  .statusbar svg { display: block; }
+
+  /* ---------- Header ---------- */
+  .header {
+    position: relative; z-index: 10;
+    display: flex; align-items: center; justify-content: space-between;
+    margin: 18px 25px 0;
+    height: 36px;
+  }
+  .header .logo { width: 117px; height: auto; display: block; }
+  .bellbtn {
+    position: relative; width: 38px; height: 38px;
+    display: flex; align-items: center; justify-content: center;
+    background: none; border: 0; cursor: pointer; margin-right: -7px;
+  }
+  .bellbtn .dot {
+    position: absolute; top: 7px; right: 8px;
+    width: 7.5px; height: 7.5px; border-radius: 50%;
+    background: var(--blue); border: 1.5px solid #fff;
+  }
+
+  /* ---------- Hero copy ---------- */
+  .hero-copy { position: relative; z-index: 5; margin: 51px 25px 0; max-width: 245px; }
+  .badge {
+    display: inline-flex; align-items: center;
+    height: 22px; padding: 0 12px;
+    border-radius: 999px;
+    background: rgba(235,247,255,.95);
+    box-shadow: 0 3px 10px rgba(45,159,238,.10);
+    color: #2AA9E9; font-size: 11.5px; font-weight: 500;
+  }
+  .hero-copy h1 {
+    margin-top: 8px;
+    font-size: 41.5px; line-height: 1.12; font-weight: 800;
+    letter-spacing: -.6px; color: #122036; white-space: nowrap;
+  }
+  .hero-copy .sub {
+    margin-top: 5px;
+    font-size: 22px; line-height: 1.3; font-weight: 600;
+    color: #16273C; white-space: nowrap;
+  }
+  .hero-copy p {
+    margin-top: 16px;
+    font-size: 13.5px; line-height: 1.68; font-weight: 400;
+    color: var(--text-2);
+  }
+
+  /* ---------- CTA ---------- */
+  .cta-wrap { position: relative; z-index: 6; margin: 27px 25px 0; }
+  .cta {
+    width: 100%; height: 53px;
+    text-decoration: none;
+    display: flex; align-items: center; justify-content: center; gap: 11px;
+    border: 0; cursor: pointer;
+    border-radius: 26px;
+    background: var(--grad-cta);
+    box-shadow: var(--sh-cta);
+    color: #fff; font-family: var(--th);
+    font-size: 20px; font-weight: 700; letter-spacing: .1px;
+    position: relative; overflow: hidden;
+    transition: transform .18s cubic-bezier(.22,1,.36,1), box-shadow .18s cubic-bezier(.22,1,.36,1);
+  }
+  .cta::before {
+    content: ""; position: absolute; inset: 0;
+    background: linear-gradient(180deg, rgba(255,255,255,.32), rgba(255,255,255,0) 46%);
+    border-radius: inherit; pointer-events: none;
+  }
+  .cta:hover { transform: translateY(-1px); box-shadow: 0 18px 32px rgba(45,159,238,.42), 0 5px 12px rgba(45,159,238,.22); }
+  .cta:active { transform: translateY(1px) scale(.99); box-shadow: 0 8px 18px rgba(45,159,238,.30); }
+  .cta:focus-visible { outline: 3px solid rgba(45,159,238,.45); outline-offset: 3px; }
+
+  .trust {
+    position: relative; z-index: 6;
+    margin-top: 13px;
+    display: flex; align-items: center; justify-content: center; gap: 7px;
+    font-size: 12.5px; color: var(--text-2);
+  }
+  .trust .sep { opacity: .45; }
+
+  /* ---------- Feature grid ---------- */
+  .features {
+    position: relative; z-index: 6;
+    margin: 15px 25px 0;
+    display: grid; grid-template-columns: 1fr 1fr; gap: 11px;
+  }
+  .fcard {
+    background: #fff;
+    border-radius: 20px;
+    padding: 12px 13px 11px;
+    box-shadow: var(--sh-card);
+  }
+  .fcard .top { display: flex; align-items: center; gap: 9px; }
+  .ftile {
+    flex: none; width: 31px; height: 31px;
+    border-radius: 10px;
+    background: linear-gradient(160deg, #E7F5FF 0%, #D9F0FE 100%);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .fcard .tt { min-width: 0; }
+  .fcard h2 { font-size: 13.5px; font-weight: 700; color: #16273C; line-height: 1.2; white-space: nowrap; }
+  .fcard .en { font-family: var(--en); font-size: 10.5px; font-weight: 400; color: #7C8FA6; margin-top: 2px; white-space: nowrap; }
+  .fcard .cap { margin-top: 9px; font-size: 11.8px; font-weight: 400; color: var(--muted); line-height: 1.45; white-space: nowrap; }
+
+  /* ---------- Social proof ---------- */
+  .social {
+    position: relative; z-index: 6;
+    margin: 12px 25px 0;
+    background: linear-gradient(135deg, #E9F5FF 0%, #DEF1FE 100%);
+    border-radius: 20px;
+    padding: 10px 12px;
+    display: flex; align-items: center; gap: 9px;
+  }
+  .social .txt { flex: 1; min-width: 0; }
+  .social .big { font-size: 14.5px; font-weight: 800; color: #1B9FE8; line-height: 1.3; white-space: nowrap; }
+  .social .small { font-size: 11.5px; font-weight: 400; color: #44566B; margin-top: 2px; white-space: nowrap; }
+  .avatars { display: flex; align-items: center; }
+  .avatars .av {
+    width: 38px; height: 38px; border-radius: 50%;
+    border: 2px solid #fff; overflow: hidden; flex: none;
+    background: #DDEFFC;
+    box-shadow: 0 2px 7px rgba(22,39,60,.10);
+    position: relative;
+  }
+  .avatars .av + .av { margin-left: -11px; }
+  .avatars .av img { position: absolute; display: block; }
+  .av-1 img { width: 124px; left: -47px; top: -34px; }
+  .av-2 img { width: 110px; left: -32px; top: -28px; transform: scaleX(-1); }
+  .av-3 img { width: 140px; left: -56px; top: -41px; }
+  .avatars .more {
+    width: 38px; height: 38px; border-radius: 50%; margin-left: -11px;
+    background: #fff; border: 2px solid #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--en); font-size: 10px; font-weight: 700; color: #1B9FE8;
+    box-shadow: 0 2px 8px rgba(22,39,60,.12);
+    flex: none; z-index: 1;
+  }
+
+  /* ---------- Tab bar ---------- */
+  .tabwrap {
+    position: sticky; bottom: 0; z-index: 20;
+    margin-top: 10px;
+    padding: 6px 20px 0;
+    background: linear-gradient(to top, #FFFFFF 78%, rgba(255,255,255,0));
+  }
+  .tabbar {
+    background: #fff;
+    border-radius: 24px;
+    box-shadow: 0 -5px 22px rgba(29,43,58,.06), 0 10px 26px rgba(29,43,58,.08);
+    display: flex;
+    padding: 9px 4px 6px;
+  }
+  .tab {
+    flex: 1; border: 0; background: none; cursor: pointer; text-decoration: none;
+    display: flex; flex-direction: column; align-items: center; gap: 3px;
+    font-family: var(--th); font-size: 10.5px; font-weight: 500;
+    color: #94A5B8;
+    padding: 1px 0;
+  }
+  .tab.active { color: var(--blue); font-weight: 600; }
+  .tab svg { display: block; }
+  .tab .tdot {
+    width: 4.5px; height: 4.5px; border-radius: 50%;
+    background: var(--blue); margin-top: 1px; opacity: 0;
+  }
+  .tab.active .tdot { opacity: 1; }
+  .home-indicator {
+    width: 128px; height: 4.5px; border-radius: 3px;
+    background: #0B0F14; margin: 7px auto 6px;
+  }
+
+  /* ---------- Motion ---------- */
+  @keyframes twinkle { 0%,100% { opacity:.95; } 50% { opacity:.25; } }
+  .mesh circle { animation: twinkle 2.6s ease-in-out infinite; }
+  .mesh circle:nth-child(3n) { animation-delay: .6s; }
+  .mesh circle:nth-child(3n+1) { animation-delay: 1.2s; }
+  @media (prefers-reduced-motion: reduce) {
+    .mesh circle { animation: none; }
+    .cta, .cta:hover, .cta:active { transition: none; transform: none; }
+  }
+</style>
+</head>
+<body>
+<div class="screen">
+  <img class="bg-art" src="assets/home-bg-full.png" alt="" aria-hidden="true">
+
+  <!-- Hero decoration (canvas coordinates) -->
+  <img class="model" src="assets/model.png" alt="นางแบบกำลังสแกนใบหน้าด้วยเทคโนโลยี AR">
+
+  <svg class="mesh" width="130" height="150" viewBox="0 0 148 186" aria-hidden="true">
+    <g stroke="#39B7F0" stroke-width="0.9" stroke-opacity="0.42" fill="none">
+      <line x1="74" y1="15" x2="41" y2="30"/><line x1="74" y1="15" x2="107" y2="30"/>
+      <line x1="41" y1="30" x2="24" y2="63"/><line x1="107" y1="30" x2="124" y2="63"/>
+      <line x1="41" y1="30" x2="33" y2="56"/><line x1="107" y1="30" x2="115" y2="56"/>
+      <line x1="33" y1="56" x2="47" y2="74"/><line x1="115" y1="56" x2="101" y2="74"/>
+      <line x1="47" y1="74" x2="74" y2="86"/><line x1="101" y1="74" x2="74" y2="86"/>
+      <line x1="74" y1="86" x2="59" y2="108"/><line x1="74" y1="86" x2="89" y2="108"/>
+      <line x1="59" y1="108" x2="74" y2="112"/><line x1="89" y1="108" x2="74" y2="112"/>
+      <line x1="47" y1="74" x2="30" y2="104"/><line x1="101" y1="74" x2="118" y2="104"/>
+      <line x1="30" y1="104" x2="59" y2="108"/><line x1="118" y1="104" x2="89" y2="108"/>
+      <line x1="30" y1="104" x2="50" y2="134"/><line x1="118" y1="104" x2="98" y2="134"/>
+      <line x1="59" y1="108" x2="50" y2="134"/><line x1="89" y1="108" x2="98" y2="134"/>
+      <line x1="50" y1="134" x2="74" y2="138"/><line x1="98" y1="134" x2="74" y2="138"/>
+      <line x1="50" y1="134" x2="38" y2="145"/><line x1="98" y1="134" x2="110" y2="145"/>
+      <line x1="38" y1="145" x2="74" y2="171"/><line x1="110" y1="145" x2="74" y2="171"/>
+      <line x1="74" y1="138" x2="74" y2="171"/>
+      <line x1="24" y1="63" x2="30" y2="104"/><line x1="124" y1="63" x2="118" y2="104"/>
+    </g>
+    <g fill="#39B7F0">
+      <circle cx="74" cy="15" r="1.9"/><circle cx="41" cy="30" r="1.9"/><circle cx="107" cy="30" r="1.9"/>
+      <circle cx="24" cy="63" r="1.9"/><circle cx="124" cy="63" r="1.9"/>
+      <circle cx="33" cy="56" r="1.9"/><circle cx="115" cy="56" r="1.9"/>
+      <circle cx="47" cy="74" r="1.9"/><circle cx="101" cy="74" r="1.9"/>
+      <circle cx="74" cy="86" r="1.9"/>
+      <circle cx="59" cy="108" r="1.9"/><circle cx="89" cy="108" r="1.9"/><circle cx="74" cy="112" r="1.9"/>
+      <circle cx="30" cy="104" r="1.9"/><circle cx="118" cy="104" r="1.9"/>
+      <circle cx="50" cy="134" r="1.9"/><circle cx="98" cy="134" r="1.9"/><circle cx="74" cy="138" r="1.9"/>
+      <circle cx="38" cy="145" r="1.9"/><circle cx="110" cy="145" r="1.9"/>
+      <circle cx="74" cy="171" r="1.9"/>
+    </g>
+  </svg>
+
+  <div class="brackets" aria-hidden="true">
+    <svg style="top:0; left:0;" width="26" height="26" viewBox="0 0 34 34" fill="none" stroke="#A3DCF9" stroke-width="3.4" stroke-linecap="round"><path d="M2 18 V5 a3 3 0 0 1 3 -3 H18"/></svg>
+    <svg style="top:0; right:0; transform:scaleX(-1);" width="26" height="26" viewBox="0 0 34 34" fill="none" stroke="#A3DCF9" stroke-width="3.4" stroke-linecap="round"><path d="M2 18 V5 a3 3 0 0 1 3 -3 H18"/></svg>
+    <svg style="bottom:0; left:0; transform:scaleY(-1);" width="26" height="26" viewBox="0 0 34 34" fill="none" stroke="#A3DCF9" stroke-width="3.4" stroke-linecap="round"><path d="M2 18 V5 a3 3 0 0 1 3 -3 H18"/></svg>
+    <svg style="bottom:0; right:0; transform:scale(-1);" width="26" height="26" viewBox="0 0 34 34" fill="none" stroke="#A3DCF9" stroke-width="3.4" stroke-linecap="round"><path d="M2 18 V5 a3 3 0 0 1 3 -3 H18"/></svg>
+  </div>
+
+  <!-- Status bar -->
+  <div class="statusbar" aria-hidden="true">
+    <span class="time">9:41</span>
+    <span style="display:flex; align-items:center; gap:6px;">
+      <svg width="18" height="11" viewBox="0 0 19 12" fill="#0B1B2B">
+        <rect x="0"  y="7.5" width="3.4" height="4.5" rx="1"/>
+        <rect x="5"  y="5"   width="3.4" height="7"   rx="1"/>
+        <rect x="10" y="2.5" width="3.4" height="9.5" rx="1"/>
+        <rect x="15" y="0"   width="3.4" height="12"  rx="1"/>
+      </svg>
+      <svg width="16" height="11" viewBox="0 0 17 12" fill="none" stroke="#0B1B2B" stroke-width="1.9" stroke-linecap="round">
+        <path d="M1.5 4.2a10.4 10.4 0 0 1 14 0"/>
+        <path d="M4.1 7a6.7 6.7 0 0 1 8.8 0"/>
+        <path d="M6.8 9.7a3 3 0 0 1 3.4 0"/>
+        <circle cx="8.5" cy="10.8" r="1" fill="#0B1B2B" stroke="none"/>
+      </svg>
+      <svg width="25" height="12" viewBox="0 0 26 12" fill="none">
+        <rect x="0.7" y="0.7" width="21" height="10.6" rx="3" stroke="#0B1B2B" stroke-opacity=".4" stroke-width="1"/>
+        <rect x="2.4" y="2.4" width="17.6" height="7.2" rx="1.8" fill="#0B1B2B"/>
+        <path d="M23.6 4v4a2.2 2.2 0 0 0 0-4Z" fill="#0B1B2B" fill-opacity=".4"/>
+      </svg>
+    </span>
+  </div>
+
+  <!-- Header -->
+  <header class="header">
+    <img class="logo" src="assets/logo-clean.png" alt="ARFACE">
+    <div style="display:flex; align-items:center; gap:10px;">
+      <button id="install-btn" type="button" aria-label="ติดตั้งแอปลงเครื่อง"
+        style="display:none; align-items:center; gap:5px; height:30px; padding:0 13px; border:0; cursor:pointer; border-radius:999px; background:var(--grad-cta); color:#fff; font-family:var(--th); font-size:12px; font-weight:600; box-shadow:0 6px 14px rgba(45,159,238,.3);">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 11l5 5 5-5M5 21h14"/></svg>
+        ติดตั้งแอป
+      </button>
+      <button class="bellbtn" aria-label="การแจ้งเตือน — มีรายการใหม่">
+        <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="#16273C" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+          <path d="M13.7 21a2 2 0 0 1-3.4 0"/>
+        </svg>
+        <span class="dot"></span>
+      </button>
+    </div>
+  </header>
+
+  <main>
+  <!-- Hero copy -->
+  <section class="hero-copy">
+    <span class="badge">เทคโนโลยี AR</span>
+    <h1>สแกนใบหน้า</h1>
+    <div class="sub">เพื่อความงามที่เข้าใจคุณ</div>
+    <p>วิเคราะห์ผิวอย่างแม่นยำ<br>แนะนำเฉพาะคุณ</p>
+  </section>
+
+  <!-- CTA -->
+  <div class="cta-wrap">
+    <a class="cta" href="scan.html">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M4 8V6a2 2 0 0 1 2-2h2M16 4h2a2 2 0 0 1 2 2v2M20 16v2a2 2 0 0 1-2 2h-2M8 20H6a2 2 0 0 1-2-2v-2"/>
+        <path d="M12 8.2l1 2.6 2.6 1-2.6 1-1 2.6-1-2.6-2.6-1 2.6-1 1-2.6Z" fill="#fff" stroke="none"/>
+      </svg>
+      สแกนใบหน้า
+    </a>
+  </div>
+
+  <div class="trust">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#2AA9E9" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M12 3l7 3v5c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6l7-3Z"/><path d="M9.2 12l2 2 3.6-3.8"/>
+    </svg>
+    ปลอดภัย <span class="sep">•</span> ไม่จัดเก็บข้อมูลโดยไม่ยินยอม
+  </div>
+
+  <!-- Feature grid -->
+  <section class="features" aria-label="ความสามารถหลัก">
+    <article class="fcard">
+      <div class="top">
+        <div class="ftile">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2D9EE8" stroke-width="1.9" stroke-linecap="round">
+            <circle cx="12" cy="12" r="3.1"/>
+            <path d="M12 2.8v2.6M12 18.6v2.6M2.8 12h2.6M18.6 12h2.6M5.5 5.5l1.8 1.8M16.7 16.7l1.8 1.8M5.5 18.5l1.8-1.8M16.7 7.3l1.8-1.8"/>
+          </svg>
+        </div>
+        <div class="tt">
+          <h2>วิเคราะห์ผิว</h2>
+          <div class="en">AI Skin Analysis</div>
+        </div>
+      </div>
+      <div class="cap">ประเมินสภาพผิว 7 มิติ</div>
+    </article>
+
+    <article class="fcard">
+      <div class="top">
+        <div class="ftile">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2D9EE8" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M13.5 3H7a1 1 0 0 0-1 1v16a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1V7.5L13.5 3Z"/>
+            <path d="M13.5 3v4.5H18"/>
+            <path d="M9.4 16.6l4.8-4.8 1.9 1.9-4.8 4.8-2.4.5.5-2.4Z" fill="#E7F5FF"/>
+          </svg>
+        </div>
+        <div class="tt">
+          <h2>จำลองผลลัพธ์</h2>
+          <div class="en">Simulation</div>
+        </div>
+      </div>
+      <div class="cap">เห็นผลลัพธ์ก่อนตัดสินใจ</div>
+    </article>
+
+    <article class="fcard">
+      <div class="top">
+        <div class="ftile">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2D9EE8" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 4v16h16"/>
+            <path d="M7.5 14.5l3.5-3.5 3 2.5 5-5.5"/>
+            <path d="M15.5 8h3.5v3.5"/>
+            <circle cx="7.5" cy="14.5" r="1.2" fill="#2D9EE8" stroke="none"/>
+            <circle cx="11" cy="11" r="1.2" fill="#2D9EE8" stroke="none"/>
+            <circle cx="14" cy="13.5" r="1.2" fill="#2D9EE8" stroke="none"/>
+          </svg>
+        </div>
+        <div class="tt">
+          <h2>ติดตามพัฒนาการ</h2>
+          <div class="en">Progress Tracking</div>
+        </div>
+      </div>
+      <div class="cap">ติดตามการเปลี่ยนแปลงผิว</div>
+    </article>
+
+    <article class="fcard">
+      <div class="top">
+        <div class="ftile">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2D9EE8" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9.5 18h5M10.5 21h3"/>
+            <path d="M12 3.5a5.6 5.6 0 0 0-3.4 10.1c.6.5 1 1.1 1.1 1.9h4.6c.1-.8.5-1.4 1.1-1.9A5.6 5.6 0 0 0 12 3.5Z"/>
+            <path d="M12 7.5a3 3 0 0 0-2.4 1.6"/>
+          </svg>
+        </div>
+        <div class="tt">
+          <h2>แนะนำเฉพาะคุณ</h2>
+          <div class="en">Personalized Tips</div>
+        </div>
+      </div>
+      <div class="cap">คำแนะนำที่เหมาะกับคุณ</div>
+    </article>
+  </section>
+
+  <!-- Social proof -->
+  <section class="social" aria-label="ผู้ใช้ไว้วางใจ">
+    <svg width="38" height="38" viewBox="0 0 44 44" fill="none" aria-hidden="true">
+      <defs>
+        <linearGradient id="medal" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stop-color="#5BC2F7"/><stop offset="100%" stop-color="#1E9FE9"/>
+        </linearGradient>
+      </defs>
+      <path d="M16 24l-4 12 6-3 4 5 4-5 6 3-4-12" fill="#9ED9F8"/>
+      <circle cx="22" cy="17" r="12.5" fill="url(#medal)"/>
+      <circle cx="22" cy="17" r="9" fill="#fff" fill-opacity=".18"/>
+      <path d="M22 10.5l1.9 3.9 4.3.6-3.1 3 .7 4.3-3.8-2-3.8 2 .7-4.3-3.1-3 4.3-.6 1.9-3.9Z" fill="#fff"/>
+    </svg>
+    <div class="txt">
+      <div class="big">มากกว่า 500,000+ คน</div>
+      <div class="small">ไว้วางใจให้ ARFACE ดูแลผิว</div>
+    </div>
+    <div class="avatars" aria-label="ผู้ใช้งานจริง">
+      <span class="av av-1"><img src="assets/model.png" alt=""></span>
+      <span class="av av-2"><img src="assets/model.png" alt=""></span>
+      <span class="av av-3"><img src="assets/model.png" alt=""></span>
+      <span class="more">+99K</span>
+    </div>
+  </section>
+  </main>
+
+  <!-- Tab bar -->
+  <div class="tabwrap">
+    <nav class="tabbar" aria-label="เมนูหลัก">
+      <button class="tab active" aria-current="page">
+        <svg width="21" height="21" viewBox="0 0 24 24" fill="#1E9FE9">
+          <path d="M11.4 3.5a1 1 0 0 1 1.2 0l7.9 6.1a1 1 0 0 1 .4.8V20a1 1 0 0 1-1 1h-5v-5.5a2.9 2.9 0 1 0-5.8 0V21h-5a1 1 0 0 1-1-1v-9.6a1 1 0 0 1 .4-.8l7.9-6.1Z"/>
+        </svg>
+        หน้าหลัก
+        <span class="tdot"></span>
+      </button>
+      <a class="tab" href="result.html">
+        <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3.5" y="3.5" width="17" height="17" rx="4.5"/>
+          <path d="M7.5 14.5l2.7-2.7 2.3 1.9 4-4.2"/>
+          <path d="M13.8 9.5h2.7v2.7"/>
+        </svg>
+        ผลลัพธ์
+        <span class="tdot"></span>
+      </a>
+      <a class="tab" href="scan.html">
+        <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M4 8V6a2 2 0 0 1 2-2h2M16 4h2a2 2 0 0 1 2 2v2M20 16v2a2 2 0 0 1-2 2h-2M8 20H6a2 2 0 0 1-2-2v-2"/>
+          <path d="M12 9v6M9 12h6"/>
+        </svg>
+        สแกน
+        <span class="tdot"></span>
+      </a>
+      <a class="tab" href="tips.html">
+        <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M9 18h6M10 21h4"/>
+          <path d="M12 3a6 6 0 0 0-3.6 10.8c.6.5 1 1.2 1.1 2H14.5c.1-.8.5-1.5 1.1-2A6 6 0 0 0 12 3Z"/>
+        </svg>
+        แนะนำ
+        <span class="tdot"></span>
+      </a>
+      <a class="tab" href="profile.html">
+        <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="8" r="3.6"/><path d="M5 20a7 7 0 0 1 14 0"/>
+        </svg>
+        โปรไฟล์
+        <span class="tdot"></span>
+      </a>
+    </nav>
+    <div class="home-indicator" aria-hidden="true"></div>
+  </div>
+</div>
+<script src="assets/fit.js"></script>
+<script src="assets/sw-register.js"></script>
+<script src="assets/install.js"></script>
+</body>
+</html>

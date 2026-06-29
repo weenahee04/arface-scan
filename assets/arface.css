@@ -1,0 +1,215 @@
+/* ============================================================
+   ARFACE — shared design system
+   Loaded by every page. Canvas-exact build: reference mockup
+   941px wide -> 430px screen (รท2.188). New pages link this file
+   and add only page-specific CSS inline.
+   ============================================================ */
+
+:root {
+  --cyan:    #28BFEF;
+  --blue:    #1E9FE9;
+  --navy:    #16273C;
+  --text-2:  #6F7F91;
+  --muted:   #8295AB;
+  --border:  #D8ECF7;
+  --success: #2FA152;
+  --warning: #DF9117;
+  --th: 'Noto Sans Thai', sans-serif;
+  --en: 'Inter', 'Noto Sans Thai', sans-serif;
+  --grad-cta: linear-gradient(110deg, #7ED0FA 0%, #4AB4F5 52%, #2D9FEE 100%);
+  --grad-screen: linear-gradient(180deg, #EAF5FD 0%, #F0F8FE 50%, #F6FBFF 100%);
+  --grad-tile: linear-gradient(160deg, #E7F5FF 0%, #D9F0FE 100%);
+  --sh-card: 0 8px 22px rgba(29,43,58,.055);
+  --sh-cta:  0 14px 26px rgba(45,159,238,.36), 0 4px 10px rgba(45,159,238,.20);
+  --r-card: 18px;
+  --ease: cubic-bezier(.22,1,.36,1);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { background: #E2EAF1; }
+body {
+  font-family: var(--th);
+  color: var(--navy);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  display: flex;
+  justify-content: center;
+  padding: 28px 0;
+  min-height: 100vh;
+}
+
+/* ---------- Phone canvas ---------- */
+.screen {
+  position: relative;
+  width: 430px;
+  flex: none;
+  background: var(--grad-screen);
+  overflow: hidden;
+  border-radius: 30px;
+  box-shadow: 0 30px 80px rgba(22,39,60,.22);
+  padding-bottom: 14px;
+}
+@media (max-width: 480px) {
+  body { padding: 0; background: #fff; }
+  .screen { width: 100%; border-radius: 0; box-shadow: none; min-height: 100vh; padding-bottom: 0; }
+}
+
+/* ---------- Status bar ---------- */
+/* status-bar slot is now just a thin safe-area spacer (no fake time/signal/battery);
+   expands on notched phones in standalone PWA so content clears the notch */
+.statusbar { position: relative; z-index: 10; height: calc(env(safe-area-inset-top, 0px) + 8px); }
+.statusbar > * { display: none !important; }
+.statusbar .time { font-size: 15.5px; font-weight: 600; letter-spacing: .1px; color: #0B1B2B; }
+.statusbar svg { display: block; }
+
+/* ---------- Top bar (back / title / info) ---------- */
+.topbar {
+  position: relative; z-index: 10;
+  display: flex; align-items: center; gap: 10px;
+  margin: 13px 18px 0; min-height: 33px;
+}
+.circbtn {
+  flex: none; width: 33px; height: 33px; border-radius: 50%;
+  background: #fff; border: 0; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 4px 14px rgba(29,43,58,.08);
+  color: var(--navy); text-decoration: none;
+}
+.topbar .ttl { flex: 1; text-align: center; font-size: 18.5px; font-weight: 700; color: #16273C; }
+.subtitle {
+  position: relative; z-index: 10;
+  margin: 9px 24px 0; text-align: center;
+  font-size: 11.5px; font-weight: 400; color: var(--text-2);
+}
+
+/* ---------- Home header (logo + bell) ---------- */
+.header {
+  position: relative; z-index: 10;
+  display: flex; align-items: center; justify-content: space-between;
+  margin: 18px 25px 0; height: 36px;
+}
+.header .logo { width: 117px; height: auto; display: block; }
+.bellbtn {
+  position: relative; width: 38px; height: 38px;
+  display: flex; align-items: center; justify-content: center;
+  background: none; border: 0; cursor: pointer; margin-right: -7px;
+}
+.bellbtn .dot {
+  position: absolute; top: 7px; right: 8px;
+  width: 7.5px; height: 7.5px; border-radius: 50%;
+  background: var(--blue); border: 1.5px solid #fff;
+}
+
+/* ---------- Tab bar ---------- */
+.tabwrap {
+  position: sticky; bottom: 0; z-index: 20;
+  margin-top: 10px; padding: 6px 20px 0;
+  background: linear-gradient(to top, #FFFFFF 78%, rgba(255,255,255,0));
+}
+.tabbar {
+  background: #fff; border-radius: 24px;
+  box-shadow: 0 -5px 22px rgba(29,43,58,.06), 0 10px 26px rgba(29,43,58,.08);
+  display: flex; padding: 9px 4px 6px;
+}
+.tab {
+  flex: 1; border: 0; background: none; cursor: pointer; text-decoration: none;
+  display: flex; flex-direction: column; align-items: center; gap: 3px;
+  font-family: var(--th); font-size: 10.5px; font-weight: 500;
+  color: #94A5B8; padding: 1px 0;
+}
+.tab.active { color: var(--blue); font-weight: 600; }
+.tab svg { display: block; }
+.tab .tdot { width: 4.5px; height: 4.5px; border-radius: 50%; background: var(--blue); margin-top: 1px; opacity: 0; }
+.tab.active .tdot { opacity: 1; }
+.home-indicator { width: 128px; height: 4.5px; border-radius: 3px; background: #0B0F14; margin: 7px auto 6px; }
+
+/* ---------- Primary / secondary buttons ---------- */
+.cta {
+  width: 100%; height: 52px;
+  display: flex; align-items: center; justify-content: center; gap: 11px;
+  border: 0; cursor: pointer; border-radius: 25px;
+  background: var(--grad-cta); box-shadow: var(--sh-cta);
+  color: #fff; font-family: var(--th); font-size: 18.5px; font-weight: 700;
+  position: relative; overflow: hidden; text-decoration: none;
+  transition: transform .18s var(--ease), box-shadow .18s var(--ease);
+}
+.cta::before {
+  content: ""; position: absolute; inset: 0;
+  background: linear-gradient(180deg, rgba(255,255,255,.32), rgba(255,255,255,0) 46%);
+  border-radius: inherit; pointer-events: none;
+}
+.cta:hover { transform: translateY(-1px); box-shadow: 0 18px 32px rgba(45,159,238,.42), 0 5px 12px rgba(45,159,238,.22); }
+.cta:active { transform: translateY(1px) scale(.99); box-shadow: 0 8px 18px rgba(45,159,238,.30); }
+.cta:focus-visible, .ghost:focus-visible, .circbtn:focus-visible { outline: 3px solid rgba(45,159,238,.45); outline-offset: 3px; }
+.ghost {
+  width: 100%; height: 46px;
+  display: flex; align-items: center; justify-content: center; gap: 9px;
+  border: 0; cursor: pointer; border-radius: 23px;
+  background: #fff; box-shadow: var(--sh-card);
+  color: var(--blue); font-family: var(--th); font-size: 15.5px; font-weight: 600;
+  text-decoration: none;
+  transition: transform .18s var(--ease);
+}
+.ghost:hover { transform: translateY(-1px); }
+.ghost:active { transform: translateY(1px); }
+
+/* ---------- Pills / badges / tags ---------- */
+.badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  height: 22px; padding: 0 12px; border-radius: 999px;
+  background: rgba(235,247,255,.95);
+  box-shadow: 0 3px 10px rgba(45,159,238,.10);
+  color: #2AA9E9; font-size: 11.5px; font-weight: 500;
+}
+.pill { height: 19px; padding: 0 9px; border-radius: 999px; display: inline-flex; align-items: center; font-size: 9.6px; font-weight: 600; }
+.pill.g { background: rgba(53,199,89,.13); color: var(--success); }
+.pill.o { background: rgba(245,166,35,.15); color: var(--warning); }
+.pill.b { background: rgba(40,165,238,.13); color: var(--blue); }
+.tag {
+  display: inline-flex; align-items: center;
+  height: 21px; padding: 0 10px; border-radius: 999px;
+  background: var(--border); color: var(--blue);
+  font-size: 11px; font-weight: 500;
+}
+
+/* ---------- Card / section / note ---------- */
+.card { background: #fff; border-radius: var(--r-card); box-shadow: var(--sh-card); }
+.sect { position: relative; z-index: 5; margin: 18px 25px 8px; font-size: 19px; font-weight: 700; color: #16273C; }
+.note {
+  background: #fff; border-radius: 15px; box-shadow: var(--sh-card);
+  padding: 8px 13px; display: flex; align-items: center; gap: 9px;
+}
+.note svg { flex: none; }
+.note .tx { font-size: 10.3px; color: var(--text-2); line-height: 1.55; }
+.note.warn { background: rgba(245,166,35,.08); box-shadow: none; border: 1px solid rgba(245,166,35,.22); }
+
+/* ---------- Segmented control ---------- */
+.segment { display: flex; background: #EEF6FC; border-radius: 13px; padding: 3px; gap: 3px; }
+.segment button {
+  flex: 1; height: 36px; border: 0; cursor: pointer; border-radius: 10px;
+  background: none; color: var(--text-2); font-family: var(--th); font-size: 13px; font-weight: 500;
+  transition: background .16s var(--ease), color .16s var(--ease);
+}
+.segment button.on { background: #fff; color: var(--blue); font-weight: 600; box-shadow: 0 3px 10px rgba(29,43,58,.08); }
+
+/* ---------- helpers ---------- */
+.row { display: flex; }
+.col { display: flex; flex-direction: column; }
+.center { display: flex; align-items: center; justify-content: center; }
+.grow { flex: 1; min-width: 0; }
+.pad { padding-left: 18px; padding-right: 18px; }
+.gap6 { gap: 6px; } .gap8 { gap: 8px; } .gap10 { gap: 10px; } .gap12 { gap: 12px; }
+.t2 { color: var(--text-2); }
+.tile {
+  flex: none; width: 31px; height: 31px; border-radius: 10px;
+  background: var(--grad-tile); display: flex; align-items: center; justify-content: center;
+}
+.link-more { display: inline-flex; align-items: center; gap: 3px; color: var(--blue); font-weight: 500; }
+.hscroll { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+.hscroll::-webkit-scrollbar { display: none; }
+
+/* ---------- motion ---------- */
+@media (prefers-reduced-motion: reduce) {
+  .cta, .ghost, .cta:hover, .cta:active, .ghost:hover, .ghost:active,
+  .segment button { transition: none; transform: none; }
+}

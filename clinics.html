@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>ARFACE — เทียบราคาฟิลเลอร์</title>
+<meta name="theme-color" content="#EAF5FD">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob: data:; font-src 'self'; connect-src 'self'; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/png" sizes="32x32" href="assets/icons/favicon-32.png">
+<link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png">
+<link rel="stylesheet" href="assets/fonts.css">
+<link rel="stylesheet" href="assets/arface.css">
+<style>
+  .screen { background: linear-gradient(180deg, #EAF6FF 0%, #F6FBFF 40%, #FFFFFF 78%); }
+  .lead { position: relative; z-index: 5; margin: 4px 24px 0; font-size: 12.5px; color: var(--text-2); }
+  .card { position: relative; z-index: 5; margin: 14px 18px 0; background: #fff; border-radius: 18px; box-shadow: var(--sh-card); padding: 16px; }
+  .sect { position: relative; z-index: 5; margin: 22px 24px 10px; font-size: 17px; font-weight: 700; color: #16273C; }
+
+  .ctitle { font-size: 15px; font-weight: 700; color: #16273C; margin-bottom: 12px; }
+  .arow { display: flex; align-items: center; gap: 11px; padding: 9px 0; border-bottom: 1px solid #F1F6FB; }
+  .arow:last-of-type { border-bottom: 0; }
+  .tog { flex: none; width: 24px; height: 24px; border-radius: 8px; border: 1.6px solid #CFE3F2; background: #fff; cursor: pointer; padding: 0; display: flex; align-items: center; justify-content: center; }
+  .tog i { width: 11px; height: 11px; border-radius: 3px; background: transparent; }
+  .arow.on .tog { border-color: var(--blue); background: var(--blue); }
+  .arow.on .tog i { background: #fff; }
+  .aname { flex: 1; font-size: 14px; font-weight: 600; color: #2A3F57; }
+  .arow:not(.on) .aname { color: var(--muted); }
+  .step { flex: none; display: flex; align-items: center; gap: 9px; }
+  .sb { width: 27px; height: 27px; border-radius: 8px; border: 1px solid var(--border); background: #F7FBFE; color: var(--blue); font-size: 16px; font-weight: 700; cursor: pointer; line-height: 1; }
+  .sv { font-family: var(--en); font-size: 12.5px; font-weight: 700; color: #16273C; min-width: 46px; text-align: center; }
+  .tierrow { display: flex; align-items: center; gap: 10px; margin-top: 14px; }
+  .tierrow label { font-size: 12.5px; font-weight: 600; color: #2A3F57; flex: none; }
+  #tier { flex: 1; height: 40px; border: 1px solid var(--border); border-radius: 11px; background: #F7FBFE; font-family: var(--th); font-size: 12.5px; color: #16273C; padding: 0 10px; }
+  .total { margin-top: 14px; background: var(--grad-tile); border-radius: 14px; padding: 13px 14px; }
+  .t-empty { font-size: 12px; color: var(--text-2); text-align: center; }
+  .t-row { display: flex; justify-content: space-between; font-size: 12px; color: var(--text-2); margin-bottom: 4px; }
+  .t-row b { font-family: var(--en); color: #16273C; }
+  .t-budget { display: flex; justify-content: space-between; align-items: baseline; border-top: 1px dashed #B7DBF3; padding-top: 9px; margin-top: 5px; }
+  .t-budget span { font-size: 12.5px; font-weight: 700; color: #16273C; }
+  .t-budget b { font-family: var(--en); font-size: 20px; font-weight: 800; color: var(--blue); letter-spacing: -.3px; }
+  .note2 { margin-top: 9px; font-size: 10px; color: var(--muted); line-height: 1.5; }
+
+  /* brand guide */
+  .brow { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 11px 0; border-bottom: 1px solid #F1F6FB; }
+  .brow:last-child { border-bottom: 0; }
+  .btier { font-size: 13.5px; font-weight: 700; color: #16273C; }
+  .bbr { font-family: var(--en); font-size: 11px; color: var(--text-2); margin-top: 2px; }
+  .bp { font-family: var(--en); font-size: 13.5px; font-weight: 700; color: var(--blue); white-space: nowrap; text-align: right; }
+  .bp small { font-size: 9.5px; color: var(--muted); font-weight: 600; }
+
+  /* filters */
+  .filters { position: relative; z-index: 5; margin: 0 18px; }
+  #q { width: 100%; height: 42px; border: 0; background: #fff; border-radius: 13px; box-shadow: var(--sh-card); padding: 0 14px; font-family: var(--th); font-size: 13px; color: #16273C; outline: none; }
+  #q::placeholder { color: var(--muted); }
+  .chips { display: flex; gap: 7px; margin-top: 10px; overflow-x: auto; scrollbar-width: none; }
+  .chips::-webkit-scrollbar { display: none; }
+  .chip { flex: none; height: 31px; padding: 0 13px; border: 1px solid var(--border); background: #fff; border-radius: 999px; font-family: var(--th); font-size: 12px; font-weight: 600; color: var(--text-2); cursor: pointer; }
+  .chip.on { background: var(--blue); border-color: var(--blue); color: #fff; }
+
+  /* clinics */
+  .clinics { position: relative; z-index: 5; margin: 12px 18px 0; display: flex; flex-direction: column; gap: 10px; }
+  .clinic { display: flex; align-items: center; gap: 12px; background: #fff; border-radius: 16px; box-shadow: var(--sh-card); padding: 12px 14px; }
+  .clinic .logo { flex: none; width: 46px; height: 46px; border-radius: 12px; background: var(--grad-tile); display: flex; align-items: center; justify-content: center; font-family: var(--en); font-weight: 800; font-size: 18px; color: var(--blue); border: 1px dashed #B7DBF3; }
+  .clinic .cm { flex: 1; min-width: 0; }
+  .clinic .cn { display: flex; align-items: center; gap: 7px; }
+  .clinic .cn span:first-child { font-size: 14px; font-weight: 700; color: #16273C; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .clinic .demo { flex: none; font-size: 9px; font-weight: 700; color: var(--warning); background: rgba(245,166,35,.15); padding: 2px 7px; border-radius: 999px; }
+  .clinic .cmeta { font-size: 11px; color: var(--muted); margin-top: 3px; }
+  .clinic .cp { flex: none; font-family: var(--en); font-size: 14px; font-weight: 800; color: var(--blue); text-align: right; }
+  .clinic .cp small { font-size: 9px; color: var(--muted); font-weight: 600; }
+  .empty { text-align: center; font-size: 12.5px; color: var(--muted); padding: 24px 0; }
+
+  .disc { position: relative; z-index: 5; margin: 16px 24px 0; font-size: 10.3px; color: var(--muted); line-height: 1.6; }
+</style>
+</head>
+<body>
+<div class="screen">
+  <div data-ar="statusbar"></div>
+  <header data-ar="topbar" data-title="เทียบราคาฟิลเลอร์" data-back="result.html"></header>
+
+  <main>
+    <p class="lead">คำนวณงบที่อยากฉีด และเทียบช่วงราคาตามแบรนด์/ระดับคลินิก</p>
+
+    <section class="card calc">
+      <div class="ctitle">คำนวณงบ — เลือกจุดที่อยากฉีด</div>
+      <div id="areas"></div>
+      <div class="tierrow">
+        <label>ระดับฟิลเลอร์</label>
+        <select id="tier" aria-label="ระดับฟิลเลอร์"></select>
+      </div>
+      <div class="total" id="total"></div>
+      <div class="note2">เป็นการประมาณการ — ราคาจริงขึ้นกับคลินิก แพทย์ ยี่ห้อ และโปรโมชัน</div>
+    </section>
+
+    <div class="sect">ช่วงราคาตามแบรนด์ (โดยประมาณ)</div>
+    <section class="card" id="brandguide"></section>
+
+    <div class="sect">เทียบคลินิก</div>
+    <div class="filters">
+      <input id="q" type="search" placeholder="ค้นหาชื่อคลินิก / จังหวัด">
+      <div class="chips" id="tierchips"></div>
+    </div>
+    <section class="clinics" id="cliniclist"></section>
+
+    <p class="disc">⚠ รายชื่อคลินิกด้านบนเป็น <b>ข้อมูลตัวอย่างเพื่อสาธิตระบบ</b> ยังไม่ใช่ข้อมูลคลินิกจริง · โลโก้เป็นช่องว่างสำหรับใส่ภายหลัง (ต้องได้รับอนุญาต) · ราคาทั้งหมดเป็น <b>ช่วงโดยประมาณตามตลาด</b> โปรดตรวจสอบกับคลินิกโดยตรง</p>
+  </main>
+
+  <nav data-ar="tabbar" data-active=""></nav>
+</div>
+
+<script src="assets/ui.js"></script>
+<script src="assets/clinics.js"></script>
+<script src="assets/sw-register.js"></script>
+<script src="assets/fit.js"></script>
+</body>
+</html>
