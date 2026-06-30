@@ -1,9 +1,9 @@
 /* ARFACE — API client for the subscription backend.
-   Talks to the ARFACE API (local dev: http://localhost:4000; set window override or
-   localStorage 'arface.apiBase' to the DigitalOcean URL later). Token in localStorage.
+   Production API runs on DigitalOcean: https://152.42.201.207.nip.io (nginx + Let's Encrypt → Node on :4000).
+   Override for local dev with localStorage 'arface.apiBase' = 'http://localhost:4000'. Token in localStorage.
    CSP: pages using this must allow the API origin in connect-src. */
 window.ARFACE_API = (function () {
-  var BASE = (localStorage.getItem('arface.apiBase') || 'http://localhost:4000').replace(/\/+$/, '');
+  var BASE = (localStorage.getItem('arface.apiBase') || 'https://152.42.201.207.nip.io').replace(/\/+$/, '');
   var TK = 'arface.token';
   function token() { return localStorage.getItem(TK) || ''; }
   function setToken(t) { if (t) localStorage.setItem(TK, t); }
