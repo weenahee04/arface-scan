@@ -5,7 +5,7 @@
    Pages: network-first with cache fallback (so updates land,
    but the app still opens offline). Bump CACHE to ship updates.
    ============================================================ */
-const CACHE = 'arface-v28';
+const CACHE = 'arface-v29';
 
 const CORE = [
   'index.html',
@@ -16,6 +16,10 @@ const CORE = [
   'tips.html',
   'article.html',
   'clinics.html',
+  'pricing.html',
+  'login.html',
+  'account.html',
+  'trial.html',
   'profile.html',
   'manifest.json',
   'assets/fonts.css',
@@ -33,6 +37,11 @@ const CORE = [
   'assets/tips.js',
   'assets/article.js',
   'assets/clinics.js',
+  'assets/pricing.js',
+  'assets/api.js',
+  'assets/auth.js',
+  'assets/account.js',
+  'assets/trial.js',
   'assets/sw-register.js',
   'assets/install.js',
   'assets/fonts/NotoSansThai-thai.woff2',

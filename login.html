@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>ARFACE — เข้าสู่ระบบคลินิก</title>
+<meta name="theme-color" content="#EAF5FD">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self' http://localhost:4000 https://localhost:4000; object-src 'none'; base-uri 'self'; form-action 'self'">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/png" sizes="32x32" href="assets/icons/favicon-32.png">
+<link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png">
+<link rel="stylesheet" href="assets/fonts.css">
+<link rel="stylesheet" href="assets/arface.css">
+<style>
+  .screen { background: var(--grad-screen); }
+  .wrap { position: relative; z-index: 5; padding: 30px 26px 24px; }
+  .logo { display: block; width: 130px; height: auto; margin: 8px auto 0; }
+  .lead { text-align: center; margin-top: 16px; }
+  .lead h1 { font-size: 21px; font-weight: 800; color: #122036; }
+  .lead p { font-size: 12.5px; color: var(--text-2); margin-top: 4px; line-height: 1.5; }
+  .card { background: #fff; border-radius: 20px; box-shadow: var(--sh-card); padding: 18px; margin-top: 20px; }
+  .segment { margin-bottom: 16px; }
+  .field { margin-bottom: 12px; }
+  .field label { display: block; font-size: 12px; font-weight: 600; color: #2A3F57; margin-bottom: 6px; }
+  .field input { width: 100%; height: 46px; border: 1px solid var(--border); border-radius: 13px; background: #F8FBFE; padding: 0 14px; font-family: var(--th); font-size: 14px; color: var(--navy); outline: none; }
+  .field input:focus { border-color: #9FD8F7; background: #fff; box-shadow: 0 0 0 3px rgba(45,159,238,.12); }
+  .err { display: none; font-size: 12px; color: #D8503C; background: rgba(216,80,60,.08); border-radius: 10px; padding: 9px 12px; margin-bottom: 12px; line-height: 1.5; }
+  .err.show { display: block; }
+  .cta { margin-top: 4px; }
+  .cta[disabled] { opacity: .6; pointer-events: none; }
+  .alt { text-align: center; margin-top: 16px; font-size: 12px; color: var(--text-2); }
+  .alt a { color: var(--blue); font-weight: 600; text-decoration: none; }
+  .api-note { text-align: center; margin-top: 14px; font-size: 10px; color: var(--muted); }
+</style>
+</head>
+<body>
+<div class="screen">
+  <div data-ar="statusbar"></div>
+  <div class="wrap">
+    <img class="logo" src="assets/logo-clean.png" alt="ARFACE">
+    <div class="lead">
+      <h1>สำหรับคลินิก & ธุรกิจ</h1>
+      <p>เข้าสู่ระบบเพื่อจัดการแพ็กเกจและการสแกนของคลินิกคุณ</p>
+    </div>
+
+    <div class="card">
+      <div class="segment" role="tablist">
+        <button id="seg-login" class="on" type="button">เข้าสู่ระบบ</button>
+        <button id="seg-reg" type="button">สมัครคลินิกใหม่</button>
+      </div>
+
+      <div class="err" id="err"></div>
+
+      <div class="field" id="f-org" style="display:none">
+        <label for="org">ชื่อคลินิก / บริษัท</label>
+        <input id="org" type="text" placeholder="เช่น ARFACE Aesthetic Clinic" autocomplete="organization">
+      </div>
+      <div class="field">
+        <label for="email">อีเมล</label>
+        <input id="email" type="email" placeholder="you@clinic.com" autocomplete="email">
+      </div>
+      <div class="field">
+        <label for="password">รหัสผ่าน</label>
+        <input id="password" type="password" placeholder="อย่างน้อย 6 ตัวอักษร" autocomplete="current-password">
+      </div>
+
+      <button class="cta" id="submit" type="button">เข้าสู่ระบบ</button>
+    </div>
+
+    <div class="alt" id="alt"></div>
+    <div class="api-note" id="api-note"></div>
+  </div>
+</div>
+
+<script src="assets/ui.js"></script>
+<script src="assets/api.js"></script>
+<script src="assets/auth.js"></script>
+<script src="assets/fit.js"></script>
+</body>
+</html>

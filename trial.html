@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>ARFACE — ทดลองสแกนฟรี</title>
+<meta name="theme-color" content="#EAF5FD">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self' http://localhost:4000 https://localhost:4000; object-src 'none'; base-uri 'self'; form-action 'self'">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/png" sizes="32x32" href="assets/icons/favicon-32.png">
+<link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png">
+<link rel="stylesheet" href="assets/fonts.css">
+<link rel="stylesheet" href="assets/arface.css">
+<style>
+  .screen { background: var(--grad-screen); }
+  .wrap { position: relative; z-index: 5; padding: 26px 24px 28px; }
+  .logo { display: block; width: 120px; height: auto; margin: 6px auto 0; }
+  .hero { text-align: center; margin-top: 22px; }
+  .hero .badge { display: inline-block; font-size: 11px; font-weight: 700; color: var(--blue); background: rgba(40,165,238,.12); padding: 4px 12px; border-radius: 999px; }
+  .hero h1 { font-size: 24px; font-weight: 800; color: #122036; margin-top: 12px; line-height: 1.3; }
+  .hero p { font-size: 13px; color: var(--text-2); margin-top: 8px; line-height: 1.6; }
+  .card { background: #fff; border-radius: 20px; box-shadow: var(--sh-card); padding: 18px; margin-top: 22px; }
+
+  .line-btn { width: 100%; height: 54px; border: 0; border-radius: 27px; background: #06C755; color: #fff; font-family: var(--th); font-size: 16px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 10px; cursor: pointer; box-shadow: 0 12px 24px rgba(6,199,85,.3); }
+  .line-btn svg { width: 22px; height: 22px; }
+  .consent { font-size: 10.5px; color: var(--muted); line-height: 1.6; margin-top: 12px; text-align: center; }
+
+  .prog-h { display: flex; justify-content: space-between; align-items: baseline; }
+  .prog-h .t { font-size: 14px; font-weight: 700; color: #16273C; }
+  .prog-h .n { font-family: var(--en); font-size: 15px; font-weight: 800; color: var(--blue); }
+  .prog { height: 14px; border-radius: 999px; background: #EAF1F8; overflow: hidden; margin: 10px 0; display: flex; gap: 3px; padding: 3px; }
+  .prog .seg { flex: 1; border-radius: 999px; background: #DCE9F3; }
+  .prog .seg.on { background: linear-gradient(90deg, #7ED0FA, #1E9FE9); }
+  .prog .seg.used { background: #C6D6E4; }
+  .sub { font-size: 11.5px; color: var(--text-2); text-align: center; margin-top: 4px; }
+
+  .cta { margin-top: 16px; }
+  .demo { display: block; width: 100%; margin-top: 10px; background: none; border: 0; color: var(--muted); font-family: var(--th); font-size: 11.5px; cursor: pointer; text-decoration: underline; }
+
+  .paywall { text-align: center; }
+  .paywall .ic { width: 60px; height: 60px; border-radius: 18px; background: var(--grad-tile); display: flex; align-items: center; justify-content: center; margin: 0 auto 14px; }
+  .paywall h2 { font-size: 19px; font-weight: 800; color: #122036; }
+  .paywall p { font-size: 12.5px; color: var(--text-2); margin-top: 6px; line-height: 1.6; }
+  .ghost2 { width: 100%; height: 46px; margin-top: 10px; border: 0; border-radius: 23px; background: #fff; box-shadow: var(--sh-card); color: var(--blue); font-family: var(--th); font-size: 14px; font-weight: 600; cursor: pointer; }
+  .loading { text-align: center; color: var(--muted); font-size: 13px; padding: 50px 0; }
+  .api-note { text-align: center; margin-top: 14px; font-size: 10px; color: var(--muted); }
+</style>
+</head>
+<body>
+<div class="screen">
+  <div data-ar="statusbar"></div>
+  <div class="wrap">
+    <img class="logo" src="assets/logo-clean.png" alt="ARFACE">
+    <div id="app"><div class="loading">กำลังโหลด…</div></div>
+    <div class="api-note" id="api-note"></div>
+  </div>
+</div>
+
+<script src="assets/ui.js"></script>
+<script src="assets/api.js"></script>
+<script src="assets/trial.js"></script>
+<script src="assets/fit.js"></script>
+</body>
+</html>

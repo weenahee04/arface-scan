@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>ARFACE — แพ็กเกจ & ราคา</title>
+<meta name="theme-color" content="#EAF5FD">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/png" sizes="32x32" href="assets/icons/favicon-32.png">
+<link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png">
+<link rel="stylesheet" href="assets/fonts.css">
+<link rel="stylesheet" href="assets/arface.css">
+<style>
+  .screen { background: linear-gradient(180deg, #EAF6FF 0%, #F6FBFF 42%, #FFFFFF 80%); }
+  .head { position: relative; z-index: 5; margin: 12px 24px 0; text-align: center; }
+  .head h1 { font-size: 23px; font-weight: 800; color: #122036; }
+  .head p { font-size: 12.5px; color: var(--text-2); margin-top: 6px; line-height: 1.55; }
+
+  .plans { position: relative; z-index: 5; margin: 18px 18px 0; display: flex; flex-direction: column; gap: 14px; }
+  .plan-card { position: relative; background: #fff; border-radius: 20px; box-shadow: var(--sh-card); padding: 20px 18px; border: 1.5px solid transparent; }
+  .plan-card.rec { border-color: #2D9FEE; box-shadow: 0 14px 30px rgba(45,159,238,.18); }
+  .pc-badge { position: absolute; top: -11px; left: 18px; background: var(--grad-cta); color: #fff; font-size: 11px; font-weight: 700; padding: 3px 12px; border-radius: 999px; box-shadow: 0 6px 14px rgba(45,159,238,.32); }
+  .pc-name { font-size: 17px; font-weight: 800; color: #16273C; }
+  .pc-price { font-family: var(--en); font-size: 30px; font-weight: 800; color: var(--navy); letter-spacing: -.5px; margin-top: 6px; }
+  .pc-price span { font-family: var(--th); font-size: 13px; font-weight: 500; color: var(--muted); letter-spacing: 0; margin-left: 5px; }
+  .pc-scans { font-size: 12px; color: var(--blue); font-weight: 600; margin-top: 6px; }
+  .pc-feat { list-style: none; margin: 14px 0 16px; padding: 0; }
+  .pc-feat li { display: flex; align-items: flex-start; gap: 8px; font-size: 13px; color: #3D4F63; line-height: 1.5; padding: 4px 0; }
+  .pc-feat li svg { flex: none; margin-top: 2px; }
+  .pc-btn { display: flex; align-items: center; justify-content: center; height: 48px; border-radius: 24px; background: var(--grad-cta); color: #fff; font-family: var(--th); font-size: 15px; font-weight: 700; text-decoration: none; box-shadow: var(--sh-cta); }
+  .pc-btn.ghost { background: #fff; color: var(--blue); box-shadow: none; border: 1.5px solid var(--border); }
+
+  .note { position: relative; z-index: 5; margin: 18px 24px 0; font-size: 10.5px; color: var(--muted); line-height: 1.6; text-align: center; }
+</style>
+</head>
+<body>
+<div class="screen">
+  <div data-ar="statusbar"></div>
+  <header data-ar="topbar" data-title="แพ็กเกจ & ราคา" data-back="index.html"></header>
+
+  <main>
+    <div class="head">
+      <h1>เลือกแพ็กเกจที่ใช่</h1>
+      <p>เริ่มทดลองฟรี ไม่มีบัตรเครดิต · อัปเกรดเมื่อพร้อม · ยกเลิกได้ทุกเมื่อ</p>
+    </div>
+
+    <div class="plans" id="plans"></div>
+
+    <p class="note">ราคายังไม่รวม VAT · จ่ายผ่าน Omise (กำลังเชื่อม) · เพราะ AI ประมวลผลบนเครื่อง โควต้าจึงให้เยอะได้ · สอบถามแพ็กเกจองค์กรติดต่อทีมงาน</p>
+  </main>
+</div>
+
+<script src="assets/ui.js"></script>
+<script src="assets/pricing.js"></script>
+<script src="assets/fit.js"></script>
+</body>
+</html>
